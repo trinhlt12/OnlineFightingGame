@@ -2777,12 +2777,6 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 841090234438633705, guid: e63a6375602a41b47a004c3d50f613c2,
-        type: 3}
-      propertyPath: networkRunnerPrefab
-      value: 
-      objectReference: {fileID: 6675226064763518460, guid: 7214375677f4e4c409d0db2458e4e431,
-        type: 3}
     - target: {fileID: 1250885795521276766, guid: e63a6375602a41b47a004c3d50f613c2,
         type: 3}
       propertyPath: m_Name
@@ -2812,6 +2806,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2772501822435766647, guid: e63a6375602a41b47a004c3d50f613c2,
+        type: 3}
+      propertyPath: m_VertexColorAlwaysGammaSpace
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8183914443532031293, guid: e63a6375602a41b47a004c3d50f613c2,
         type: 3}
