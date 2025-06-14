@@ -471,19 +471,19 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.19f1\Editor\Data\PlaybackEngines\WindowsStandaloneSupport\UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
-      <HintPath>C:\Users\Admin\Downloads\OnlineFightingGame\Library\PackageCache\com.unity.ext.nunit@1.0.6\net35\unity-custom\nunit.framework.dll</HintPath>
+      <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Library\PackageCache\com.unity.ext.nunit@1.0.6\net35\unity-custom\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil">
-      <HintPath>C:\Users\Admin\Downloads\OnlineFightingGame\Library\PackageCache\com.unity.nuget.mono-cecil@1.10.2\Mono.Cecil.dll</HintPath>
+      <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Library\PackageCache\com.unity.nuget.mono-cecil@1.10.2\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil.Pdb">
-      <HintPath>C:\Users\Admin\Downloads\OnlineFightingGame\Library\PackageCache\com.unity.nuget.mono-cecil@1.10.2\Mono.Cecil.Pdb.dll</HintPath>
+      <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Library\PackageCache\com.unity.nuget.mono-cecil@1.10.2\Mono.Cecil.Pdb.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil.Mdb">
-      <HintPath>C:\Users\Admin\Downloads\OnlineFightingGame\Library\PackageCache\com.unity.nuget.mono-cecil@1.10.2\Mono.Cecil.Mdb.dll</HintPath>
+      <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Library\PackageCache\com.unity.nuget.mono-cecil@1.10.2\Mono.Cecil.Mdb.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil.Rocks">
-      <HintPath>C:\Users\Admin\Downloads\OnlineFightingGame\Library\PackageCache\com.unity.nuget.mono-cecil@1.10.2\Mono.Cecil.Rocks.dll</HintPath>
+      <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Library\PackageCache\com.unity.nuget.mono-cecil@1.10.2\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Android.Types">
       <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.19f1\Editor\Data\PlaybackEngines\AndroidPlayer\Unity.Android.Types.dll</HintPath>

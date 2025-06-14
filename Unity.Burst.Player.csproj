@@ -300,7 +300,7 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.19f1\Editor\Data\PlaybackEngines\WindowsStandaloneSupport\Variations\mono\Managed\UnityEngine.XRModule.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Burst.Unsafe">
-      <HintPath>C:\Users\Admin\Downloads\OnlineFightingGame\Library\PackageCache\com.unity.burst@1.8.12\Unity.Burst.Unsafe.dll</HintPath>
+      <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Library\PackageCache\com.unity.burst@1.8.12\Unity.Burst.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="netstandard">
       <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.19f1\Editor\Data\NetStandard\ref\2.1.0\netstandard.dll</HintPath>
