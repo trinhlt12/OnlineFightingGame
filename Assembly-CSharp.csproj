@@ -50,11 +50,14 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Stages\PrepareData.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\NetworkKCCProcessorProvider.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\KCCProcessor.cs" />
+    <Compile Include="Assets\_GAME\Scripts\MenuImplementation\MenuConnectionBehaviour.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkQuaternion.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCTypes.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\CameraRecorder.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Stages.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Stages\AfterMoveStep.cs" />
+    <Compile Include="Assets\_GAME\Scripts\MenuImplementation\MenuConnection.cs" />
+    <Compile Include="Assets\_GAME\Scripts\CameraFollow.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Stages\Core\KCCStageInfo.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkProperties.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkVector2.cs" />
@@ -63,7 +66,6 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\NetworkTRSPProcessorProvider.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.RPCs.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkID.cs" />
-    <Compile Include="Assets\Scripts\CourseGenerator.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\KCCPhysicsUtility.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Debug.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\Collections\KCCInteractions.cs" />
@@ -88,25 +90,25 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\NetworkTRSPProcessor.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\KCCTransformSampler.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Stages\BeginMove.cs" />
-    <Compile Include="Assets\Scripts\UI\UICanvas.cs" />
     <Compile Include="Assets\Photon\PhotonLibs\WebSocket\WebSocket.cs" />
-    <Compile Include="Assets\Scripts\InputManager.cs" />
+    <Compile Include="Assets\_GAME\Scripts\UI\UICanvas.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\StatsWriter.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCGameObjectExtensions.cs" />
-    <Compile Include="Assets\Scripts\Singleton.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCFloatExtensions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Attributes\KCCLayerAtribute.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\ScriptableKCCProcessorProvider.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\IKCCProcessorProvider.cs" />
+    <Compile Include="Assets\_GAME\Scripts\UI\CharacterSelectionCanvas.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Interactions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Debug\CallbackLogger.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCOverlapHit.cs" />
+    <Compile Include="Assets\_GAME\Scripts\GameLogic.cs" />
+    <Compile Include="Assets\_GAME\Scripts\CourseGenerator.cs" />
+    <Compile Include="Assets\_GAME\Scripts\MenuImplementation\MenuUIController.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\GenericKCCProcessorProvider.cs" />
-    <Compile Include="Assets\Scripts\Player.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\KCCTimer.cs" />
-    <Compile Include="Assets\Scripts\MenuImplementation\MenuConnectionBehaviour.cs" />
-    <Compile Include="Assets\Scripts\GameLogic.cs" />
-    <Compile Include="Assets\Scripts\CameraFollow.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Singleton.cs" />
+    <Compile Include="Assets\_GAME\Scripts\UI\UIManager.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\KCCProcessorProvider.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCQuaternionExtensions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\ScriptableKCCProcessor.cs" />
@@ -117,6 +119,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Stages\Core\IKCCStage.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkFloatRange.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\StatsRecorder.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Player.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\IKCCProcessor.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCComponentExtensions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCDebug.cs" />
@@ -127,21 +130,19 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCIListExtensions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkInt.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Attributes\KCCProcessorReferenceAtribute.cs" />
-    <Compile Include="Assets\Scripts\MenuImplementation\MenuConnection.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Accumulators\FloatAccumulator.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Depenetration.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCTraceInfo.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\Collections\KCCHits.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCShapeCastHit.cs" />
-    <Compile Include="Assets\Scripts\MenuImplementation\MenuUIController.cs" />
+    <Compile Include="Assets\_GAME\Scripts\InputManager.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\SmoothValues\SmoothVector3.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkProperty.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Stages\EndMove.cs" />
+    <Compile Include="Assets\_GAME\Scripts\NetInput.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Accumulators\Vector2Accumulator.cs" />
-    <Compile Include="Assets\Scripts\UI\UIManager.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\PlayerRecorder.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Events.cs" />
-    <Compile Include="Assets\Scripts\UI\CharacterSelectionCanvas.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Methods.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Accumulators\Vector3Accumulator.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkFloat.cs" />
@@ -156,7 +157,6 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\Collections\KCCFastStack.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Sampling.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Network.cs" />
-    <Compile Include="Assets\Scripts\NetInput.cs" />
     <None Include="Library\PackageCache\com.unity.modules.subsystems@1.0.0\package.json" />
     <None Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\package.json" />
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
@@ -171,6 +171,7 @@
     <None Include="Library\PackageCache\com.unity.modules.ai@1.0.0\package.json" />
     <None Include="Library\PackageCache\com.unity.inputsystem@1.7.0\ValidationConfig.json" />
     <None Include="Library\PackageCache\com.unity.ugui@1.0.0\package.json" />
+    <None Include="Library\PackageCache\com.unity.2d.tilemap@1.0.0\package.json" />
     <None Include="Library\PackageCache\com.unity.ext.nunit@1.0.6\package.json" />
     <None Include="Assets\Photon\Fusion\Assemblies\Fusion.Common.xml" />
     <None Include="Library\PackageCache\com.unity.render-pipelines.universal-config@14.0.9\package.json" />
@@ -251,6 +252,7 @@
     <None Include="Library\PackageCache\com.unity.visualscripting@1.9.1\ValidationConfig.json" />
     <None Include="Library\PackageCache\com.unity.modules.terrain@1.0.0\package.json" />
     <None Include="Assets\Photon\Fusion\build_info.txt" />
+    <None Include="Library\PackageCache\com.unity.2d.sprite@1.0.0\package.json" />
     <None Include="Library\PackageCache\com.unity.modules.androidjni@1.0.0\package.json" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF Overlay.shader" />
     <None Include="Library\PackageCache\com.unity.textmeshpro@3.0.7\PackageConversionData_Assets.json" />
@@ -1003,6 +1005,10 @@
       <Project>{1e6b003d-8aaa-daa1-ba4b-d386cc43d6b5}</Project>
       <Name>Unity.RenderPipelines.Universal.Config.Runtime</Name>
     </ProjectReference>
+    <ProjectReference Include="Unity.2D.Sprite.Editor.csproj">
+      <Project>{4d970a4c-ba63-dc14-0d30-a2a738688070}</Project>
+      <Name>Unity.2D.Sprite.Editor</Name>
+    </ProjectReference>
     <ProjectReference Include="Unity.RenderPipelines.Core.Editor.csproj">
       <Project>{8fccd06b-66d3-ac05-7a74-c96084b65073}</Project>
       <Name>Unity.RenderPipelines.Core.Editor</Name>
@@ -1086,6 +1092,10 @@
     <ProjectReference Include="Unity.VSCode.Editor.csproj">
       <Project>{53300793-0188-85e7-c8ec-08539ba1a66a}</Project>
       <Name>Unity.VSCode.Editor</Name>
+    </ProjectReference>
+    <ProjectReference Include="Unity.2D.Tilemap.Editor.csproj">
+      <Project>{3e93b00a-0a24-0dcb-55ab-564192e43b0b}</Project>
+      <Name>Unity.2D.Tilemap.Editor</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.RenderPipelines.Universal.Editor.csproj">
       <Project>{c5a38b1e-59a7-8e1c-9f9c-f8b204098b76}</Project>

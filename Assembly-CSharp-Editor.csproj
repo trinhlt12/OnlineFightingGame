@@ -49,10 +49,10 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Editor\KCCEditor.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Editor\KCCProxyBehaviorDrawer.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Editor\KCCLayerDrawer.cs" />
-    <Compile Include="Assets\Scripts\Editor\CourseGeneratorEditor.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Editor\StatsRecorderEditor.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Editor\KCCProcessorReferenceDrawer.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Editor\DisabledInPlayModeDrawer.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Editor\CourseGeneratorEditor.cs" />
     <None Include="Library\PackageCache\com.unity.collab-proxy@2.2.0\Lib\Editor\PlasticSCM\Localization\commontypes.ko.txt" />
     <None Include="Library\PackageCache\com.unity.collab-proxy@2.2.0\Lib\Editor\PlasticSCM\Localization\workspaceserver.zh-Hant.txt" />
     <None Include="Library\PackageCache\com.unity.collab-proxy@2.2.0\Lib\Editor\PlasticSCM\Localization\cm-help.en.txt" />
@@ -940,6 +940,10 @@
       <Project>{1e6b003d-8aaa-daa1-ba4b-d386cc43d6b5}</Project>
       <Name>Unity.RenderPipelines.Universal.Config.Runtime</Name>
     </ProjectReference>
+    <ProjectReference Include="Unity.2D.Sprite.Editor.csproj">
+      <Project>{4d970a4c-ba63-dc14-0d30-a2a738688070}</Project>
+      <Name>Unity.2D.Sprite.Editor</Name>
+    </ProjectReference>
     <ProjectReference Include="Unity.RenderPipelines.Core.Editor.csproj">
       <Project>{8fccd06b-66d3-ac05-7a74-c96084b65073}</Project>
       <Name>Unity.RenderPipelines.Core.Editor</Name>
@@ -1023,6 +1027,10 @@
     <ProjectReference Include="Unity.VSCode.Editor.csproj">
       <Project>{53300793-0188-85e7-c8ec-08539ba1a66a}</Project>
       <Name>Unity.VSCode.Editor</Name>
+    </ProjectReference>
+    <ProjectReference Include="Unity.2D.Tilemap.Editor.csproj">
+      <Project>{3e93b00a-0a24-0dcb-55ab-564192e43b0b}</Project>
+      <Name>Unity.2D.Tilemap.Editor</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.RenderPipelines.Universal.Editor.csproj">
       <Project>{c5a38b1e-59a7-8e1c-9f9c-f8b204098b76}</Project>
