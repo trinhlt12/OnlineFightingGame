@@ -25,6 +25,9 @@ MonoBehaviour:
   - Name: Game
     ScenePath: Assets/Scenes/Game.unity
     Preview: {fileID: 0}
+  - Name: Selection
+    ScenePath: Assets/Scenes/Seletion.unity
+    Preview: {fileID: 21300000, guid: 992b47b0e4365b24da979bc7e6fded36, type: 3}
   _machineId: {fileID: -755480892457977500, guid: 14d0ba76e6402554fb21eb7d976871ff,
     type: 3}
   _codeGenerator: {fileID: 11400000, guid: 2d88136449f10fb4da15557de6b21b72, type: 2}

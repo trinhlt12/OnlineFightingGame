@@ -88,10 +88,12 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\NetworkTRSPProcessor.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\KCCTransformSampler.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Stages\BeginMove.cs" />
+    <Compile Include="Assets\Scripts\UI\UICanvas.cs" />
     <Compile Include="Assets\Photon\PhotonLibs\WebSocket\WebSocket.cs" />
     <Compile Include="Assets\Scripts\InputManager.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\StatsWriter.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCGameObjectExtensions.cs" />
+    <Compile Include="Assets\Scripts\Singleton.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCFloatExtensions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Attributes\KCCLayerAtribute.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\ScriptableKCCProcessorProvider.cs" />
@@ -136,8 +138,10 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkProperty.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Stages\EndMove.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Accumulators\Vector2Accumulator.cs" />
+    <Compile Include="Assets\Scripts\UI\UIManager.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\PlayerRecorder.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Events.cs" />
+    <Compile Include="Assets\Scripts\UI\CharacterSelectionCanvas.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Methods.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Accumulators\Vector3Accumulator.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkFloat.cs" />
