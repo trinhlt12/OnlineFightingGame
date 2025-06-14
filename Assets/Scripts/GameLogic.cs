@@ -12,8 +12,9 @@ public class GameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     {
         if (HasStateAuthority)
         {
-            NetworkObject playerObject = Runner.Spawn(playerPrefab, Vector3.up, Quaternion.identity, player);
-            Players.Add(player, playerObject.GetComponent<Player>());
+            /*NetworkObject playerObject = Runner.Spawn(playerPrefab, Vector3.up, Quaternion.identity, player);
+            Players.Add(player, playerObject.GetComponent<Player>());*/
+            Debug.Log($"Player {player} joined the game.");
         }
     }
 
