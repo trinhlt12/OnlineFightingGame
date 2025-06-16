@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e88558b7308041dbacf861ca2aa0a560, type: 3}
+  m_Name: Mooni
+  m_EditorClassIdentifier: 
+  CharacterName: Mooni
+  CharacterIcon: {fileID: 925317725, guid: 289eb6f75c0fb174aacc57442a2a285a, type: 3}

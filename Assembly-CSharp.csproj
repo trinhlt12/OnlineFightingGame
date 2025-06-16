@@ -99,6 +99,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\ScriptableKCCProcessorProvider.cs" />
     <Compile Include="Assets\_GAME\Scripts\UI\CharacterSelectionCanvas.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\IKCCProcessorProvider.cs" />
+    <Compile Include="Assets\_GAME\Scripts\CharacterSelection\PlayerSlotManager.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Interactions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Debug\CallbackLogger.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCOverlapHit.cs" />
@@ -125,6 +126,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCDebug.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCData.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\SmoothValues\SmoothVector2.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Data\CharacterData.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCOverlapInfo.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\SmoothValues\SmoothValue.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCIListExtensions.cs" />
