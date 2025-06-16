@@ -90,8 +90,8 @@
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\AssetCallbacks\CreateShaderGraph.cs" />
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Generation\Data\DropdownEntry.cs" />
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Drawing\Inspector\PropertyDrawers\EnumPropertyDrawer.cs" />
-    <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Data\Graphs\SerializableMesh.cs" />
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Data\Graphs\ColorRGBMaterialSlot.cs" />
+    <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Data\Graphs\SerializableMesh.cs" />
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Generation\Collections\AdditionalCommandCollection.cs" />
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Generation\Data\KeywordEntry.cs" />
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Generation\Descriptors\RenderStateDescriptor.cs" />
@@ -413,9 +413,9 @@
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Generation\Targets\BuiltIn\Editor\ShaderGraph\BuiltInStructs.cs" />
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Data\Graphs\CubemapInputMaterialSlot.cs" />
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Data\Legacy\SerializableGuid.cs" />
+    <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Generation\Collections\DependencyCollection.cs" />
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Drawing\Views\Slots\ScreenPositionSlotControlView.cs" />
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Util\ValueUtilities.cs" />
-    <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Generation\Collections\DependencyCollection.cs" />
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Data\Graphs\VertexColorMaterialSlot.cs" />
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Data\Nodes\Input\Scene\SceneDepthNode.cs" />
     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.10\Editor\Drawing\PreviewManager.cs" />

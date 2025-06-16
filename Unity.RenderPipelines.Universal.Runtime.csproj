@@ -54,8 +54,8 @@
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\2D\Clipper.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Overrides\ColorAdjustments.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Tiling\TileSize.cs" />
-    <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Decal\Entities\DecalEntityManager.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\ReflectionProbeManager.cs" />
+    <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Decal\Entities\DecalEntityManager.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\MotionVectors.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\External\LibTessDotNet\MeshUtils.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\2D\Light2D.cs" />
@@ -109,8 +109,8 @@
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Debug\DebugHandler.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Decal\Entities\DecalDrawSystem.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Passes\PostProcessPass.cs" />
-    <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Passes\CapturePass.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Passes\FinalBlitPass.cs" />
+    <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Passes\CapturePass.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\UniversalAdditionalCameraData.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\2D\Light2DManager.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Decal\DecalProjector.cs" />
@@ -125,9 +125,9 @@
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\2D\UTess2D\ArraySlice.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\RendererFeatures\FullScreenPassRendererFeature.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Overrides\Tonemapping.cs" />
-    <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\SpaceFillingCurves.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\2D\Passes\IRenderPass2D.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Memory\BuddyAllocator.cs" />
+    <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\SpaceFillingCurves.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Tiling\TilingJob.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Debug\DebugDisplaySettingsMaterial.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@14.0.10\Runtime\Overrides\LiftGammaGain.cs" />

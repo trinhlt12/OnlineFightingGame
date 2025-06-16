@@ -197,8 +197,8 @@
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@14.0.10\Runtime\Debugging\FrameTiming\FrameTimeBottleneck.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@14.0.10\Runtime\Lighting\ProbeVolume\ProbeVolumePositioning.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@14.0.10\Runtime\Lighting\ProbeVolume\ProbeVolumePerSceneData.cs" />
-    <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@14.0.10\Runtime\Textures\MSAASamples.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@14.0.10\Runtime\Debugging\VolumeDebugSettings.cs" />
+    <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@14.0.10\Runtime\Textures\MSAASamples.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@14.0.10\Runtime\Debugging\Prefabs\Scripts\DebugUIHandlerButton.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@14.0.10\Runtime\Debugging\DebugManager.UIState.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.core@14.0.10\Runtime\Textures\PowerOfTwoTextureAtlas.cs" />

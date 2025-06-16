@@ -940,10 +940,6 @@
       <Project>{1e6b003d-8aaa-daa1-ba4b-d386cc43d6b5}</Project>
       <Name>Unity.RenderPipelines.Universal.Config.Runtime</Name>
     </ProjectReference>
-    <ProjectReference Include="Unity.2D.Sprite.Editor.csproj">
-      <Project>{4d970a4c-ba63-dc14-0d30-a2a738688070}</Project>
-      <Name>Unity.2D.Sprite.Editor</Name>
-    </ProjectReference>
     <ProjectReference Include="Unity.RenderPipelines.Core.Editor.csproj">
       <Project>{8fccd06b-66d3-ac05-7a74-c96084b65073}</Project>
       <Name>Unity.RenderPipelines.Core.Editor</Name>
@@ -955,6 +951,10 @@
     <ProjectReference Include="Unity.VisualScripting.Flow.Editor.csproj">
       <Project>{d02b7d3a-792e-ce51-7d6e-60718f353f23}</Project>
       <Name>Unity.VisualScripting.Flow.Editor</Name>
+    </ProjectReference>
+    <ProjectReference Include="Unity.2D.Sprite.Editor.csproj">
+      <Project>{4d970a4c-ba63-dc14-0d30-a2a738688070}</Project>
+      <Name>Unity.2D.Sprite.Editor</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.Mathematics.Editor.csproj">
       <Project>{4c8892fd-e94a-1721-7f08-12ae7c7210f8}</Project>
