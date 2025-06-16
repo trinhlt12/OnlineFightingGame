@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\SmoothValues\SmoothDouble.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCVector2Extensions.cs" />
+    <Compile Include="Assets\_GAME\Scripts\CharacterSelection\CharacterSelectionPlayer.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Stages\PrepareData.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\NetworkKCCProcessorProvider.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\KCCProcessor.cs" />
@@ -101,6 +102,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\IKCCProcessorProvider.cs" />
     <Compile Include="Assets\_GAME\Scripts\CharacterSelection\PlayerSlotManager.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Interactions.cs" />
+    <Compile Include="Assets\_GAME\Scripts\CharacterSelection\CharacterSelectionState.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Debug\CallbackLogger.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCOverlapHit.cs" />
     <Compile Include="Assets\_GAME\Scripts\GameLogic.cs" />

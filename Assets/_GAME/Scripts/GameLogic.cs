@@ -1,22 +1,32 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Fusion;
 using UnityEngine;
 
 public class GameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 {
     [SerializeField]          private NetworkPrefabRef                     playerPrefab;
+    [SerializeField]          private CharacterSelectionPlayer       characterSelectionPlayerPrefab;
     [Networked, Capacity(12)] private NetworkDictionary<PlayerRef, Player> Players => default;
 
     public void PlayerJoined(PlayerRef player)
     {
-        if (HasStateAuthority)
+        Debug.Log($"Player [{player}] joined the game.");
+
+        if (!HasStateAuthority)
+            return;
+
+        bool alreadyHas = FindObjectsOfType<CharacterSelectionPlayer>()
+            .Any(p => p.Object.HasInputAuthority && p.Object.InputAuthority == player);
+
+        if (!alreadyHas)
         {
-            /*NetworkObject playerObject = Runner.Spawn(playerPrefab, Vector3.up, Quaternion.identity, player);
-            Players.Add(player, playerObject.GetComponent<Player>());*/
-            Debug.Log($"Player {player} joined the game.");
+            Runner.Spawn(characterSelectionPlayerPrefab, inputAuthority: player);
+            Debug.Log($"[GameLogic] Spawned CharacterSelectionPlayer for {player}");
         }
     }
+
 
     public void PlayerLeft(PlayerRef player)
     {

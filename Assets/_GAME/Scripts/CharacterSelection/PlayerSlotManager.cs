@@ -1,6 +1,7 @@
 namespace _GAME.Scripts.CharacterSelection
 {
     using Fusion;
+    using UnityEngine;
 
     public class PlayerSlotManager :  NetworkBehaviour, IPlayerJoined
     {
@@ -21,6 +22,7 @@ namespace _GAME.Scripts.CharacterSelection
             {
                 Slots.Add(player, _nextSlot++);
             }
+
         }
 
         public int GetSlot(PlayerRef player)

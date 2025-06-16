@@ -7,6 +7,7 @@ namespace _GAME.Scripts.Data
     {
         public string CharacterName;
         public Sprite CharacterIcon;
+        public GameObject characterPrefab;
 
         //stats:
     }
