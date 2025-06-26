@@ -26,7 +26,7 @@ namespace UI
         {
             _runner = FindObjectOfType<NetworkRunner>();
 
-            float timeout = 2f;
+            var timeout = 2f;
             while (timeout > 0f)
             {
                 _localSelectionPlayer = FindObjectsOfType<CharacterSelectionPlayer>()

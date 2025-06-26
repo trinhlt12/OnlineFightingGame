@@ -6,7 +6,7 @@ namespace _GAME.Scripts.CharacterSelection
     public class PlayerSlotManager :  NetworkBehaviour, IPlayerJoined
     {
         public static                    PlayerSlotManager                 Instance { get; private set; }
-        [Networked, Capacity(2)] private NetworkDictionary<PlayerRef, int> Slots    => default;
+        [Networked][Capacity(2)] private NetworkDictionary<PlayerRef, int> Slots    => default;
         private                          int                               _nextSlot = 1;
 
         public override void Spawned()
@@ -22,12 +22,11 @@ namespace _GAME.Scripts.CharacterSelection
             {
                 Slots.Add(player, _nextSlot++);
             }
-
         }
 
         public int GetSlot(PlayerRef player)
         {
-            return Slots.TryGet(player, out int slot) ? slot : -1;
+            return Slots.TryGet(player, out var slot) ? slot : -1;
         }
     }
 }

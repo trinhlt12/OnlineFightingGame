@@ -48,7 +48,7 @@ namespace _GAME.Scripts.CharacterSelection
 
             if (PlayerSelections.ContainsKey(player))
             {
-                PlayerSelectionData newData = PlayerSelections[player];
+                var newData = PlayerSelections[player];
                 newData.CharacterIndex = characterIndex;
                 PlayerSelections.Set(player, newData);
             }
