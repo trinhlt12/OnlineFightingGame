@@ -27,7 +27,7 @@ public class CanvasRenderBridge : NetworkBehaviour
             CharacterSelectionState.Instance.OnStateSpawned += OnStateReady;
             CharacterSelectionState.Instance.OnSelectionChanged += OnSelectionChanged;
             _isSubscribed = true;
-            Debug.Log("[CanvasRenderBridge] Subscribed to state events");
+            Debug.Log($"[CanvasRenderBridge] Subscribed to state events on {(HasStateAuthority ? "Host" : "Client")}");
         }
 
         // Initialize canvas if state is already ready
@@ -39,6 +39,7 @@ public class CanvasRenderBridge : NetworkBehaviour
 
     private void OnStateReady()
     {
+        Debug.Log($"[CanvasRenderBridge] OnStateReady called on {(HasStateAuthority ? "Host" : "Client")}");
         if (_canvas != null && !_canvas.IsInitialized)
         {
             _canvas.InitializeFromBridge();
@@ -48,6 +49,8 @@ public class CanvasRenderBridge : NetworkBehaviour
 
     private void OnSelectionChanged()
     {
+        Debug.Log($"[CanvasRenderBridge] OnSelectionChanged called on {(HasStateAuthority ? "Host" : "Client")}");
+
         // Force UI update when selection changes
         if (_canvas != null && _canvas.IsInitialized)
         {
@@ -57,12 +60,8 @@ public class CanvasRenderBridge : NetworkBehaviour
 
     public override void Render()
     {
-        // This is called every frame, but we only update when necessary
-        // The event-based system should handle most updates
-        if (CharacterSelectionState.Instance != null && _canvas != null && _canvas.IsInitialized)
-        {
-            // Optional: Add additional render-time checks here if needed
-        }
+        // Only update when necessary, not every frame
+        // The event-based system should handle updates
     }
 
     private void OnDestroy()
@@ -72,6 +71,16 @@ public class CanvasRenderBridge : NetworkBehaviour
         {
             CharacterSelectionState.Instance.OnStateSpawned -= OnStateReady;
             CharacterSelectionState.Instance.OnSelectionChanged -= OnSelectionChanged;
+        }
+    }
+
+    // Debug method to force refresh
+    public void ForceRefresh()
+    {
+        Debug.Log($"[CanvasRenderBridge] ForceRefresh called on {(HasStateAuthority ? "Host" : "Client")}");
+        if (_canvas != null && _canvas.IsInitialized)
+        {
+            _canvas.CheckForNetworkStateChanges();
         }
     }
 }

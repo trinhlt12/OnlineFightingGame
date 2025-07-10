@@ -48,6 +48,10 @@ namespace UI
         private List<CharacterSelectionButton> _characterButtons = new List<CharacterSelectionButton>();
         private int _selectedCharacterIndex = -1;
 
+        // State tracking to avoid unnecessary updates
+        private int _lastPlayer1CharacterIndex = -1;
+        private int _lastPlayer2CharacterIndex = -1;
+
         public bool IsInitialized => _isInitialized;
 
         private void Start()
@@ -145,6 +149,14 @@ namespace UI
         private void OnSelectionChanged()
         {
             Debug.Log("[CharacterSelectionCanvas] OnSelectionChanged event received");
+
+            // Only update if initialized
+            if (!_isInitialized)
+            {
+                Debug.LogWarning("[CharacterSelectionCanvas] OnSelectionChanged called but not initialized yet");
+                return;
+            }
+
             UpdatePlayerDisplays();
             UpdateCharacterButtonStates();
             UpdateReadyButton();
@@ -212,12 +224,19 @@ namespace UI
 
         private void UpdatePlayerDisplays()
         {
-            if (CharacterSelectionState.Instance == null) return;
+            if (CharacterSelectionState.Instance == null)
+            {
+                Debug.LogWarning("[CharacterSelectionCanvas] CharacterSelectionState is null, skipping update");
+                return;
+            }
 
             var selections = CharacterSelectionState.Instance.GetPlayerSelections();
 
-            // Reset displays
-            ResetPlayerDisplays();
+            Debug.Log($"[CharacterSelectionCanvas] UpdatePlayerDisplays called - {selections.Count} players");
+
+            // Track which slots have been updated to avoid unnecessary resets
+            bool player1Updated = false;
+            bool player2Updated = false;
 
             // Update each player's display
             foreach (var kvp in selections)
@@ -230,25 +249,45 @@ namespace UI
                 if (data.Slot == 1)
                 {
                     UpdatePlayer1Display(characterData, player, isLocalPlayer);
+                    player1Updated = true;
                 }
                 else if (data.Slot == 2)
                 {
                     UpdatePlayer2Display(characterData, player, isLocalPlayer);
+                    player2Updated = true;
                 }
+            }
+
+            // Only reset displays that haven't been updated (empty slots)
+            if (!player1Updated)
+            {
+                ResetPlayer1Display();
+            }
+
+            if (!player2Updated)
+            {
+                ResetPlayer2Display();
             }
         }
 
         private void ResetPlayerDisplays()
         {
-            // Reset Player 1
+            ResetPlayer1Display();
+            ResetPlayer2Display();
+        }
+
+        private void ResetPlayer1Display()
+        {
             if (player1Portrait != null) player1Portrait.sprite = null;
             if (player1CharacterName != null) player1CharacterName.text = "";
             if (player1PlayerName != null) player1PlayerName.text = "Waiting...";
             if (player1ReadyIndicator != null) player1ReadyIndicator.SetActive(false);
             if (player1SelectionStatus != null) player1SelectionStatus.text = "Selecting...";
             if (player1StatsDisplay != null) player1StatsDisplay.Reset();
+        }
 
-            // Reset Player 2
+        private void ResetPlayer2Display()
+        {
             if (player2Portrait != null) player2Portrait.sprite = null;
             if (player2CharacterName != null) player2CharacterName.text = "";
             if (player2PlayerName != null) player2PlayerName.text = "Waiting...";
@@ -259,12 +298,22 @@ namespace UI
 
         private void UpdatePlayer1Display(CharacterData characterData, PlayerRef player, bool isLocalPlayer)
         {
+            int characterIndex = characterData != null ? System.Array.IndexOf(characterOptions, characterData) : -1;
+
+            // Only update if character actually changed
+            if (_lastPlayer1CharacterIndex == characterIndex)
+            {
+                return; // No change, skip update
+            }
+
+            _lastPlayer1CharacterIndex = characterIndex;
+
             if (characterData != null)
             {
                 if (player1Portrait != null)
                 {
                     player1Portrait.sprite = characterData.CharacterPortrait ?? characterData.CharacterIcon;
-                    player1Portrait.color = Color.white; // Ensure it's visible
+                    player1Portrait.color = Color.white;
                 }
 
                 if (player1CharacterName != null)
@@ -297,12 +346,22 @@ namespace UI
 
         private void UpdatePlayer2Display(CharacterData characterData, PlayerRef player, bool isLocalPlayer)
         {
+            int characterIndex = characterData != null ? System.Array.IndexOf(characterOptions, characterData) : -1;
+
+            // Only update if character actually changed
+            if (_lastPlayer2CharacterIndex == characterIndex)
+            {
+                return; // No change, skip update
+            }
+
+            _lastPlayer2CharacterIndex = characterIndex;
+
             if (characterData != null)
             {
                 if (player2Portrait != null)
                 {
                     player2Portrait.sprite = characterData.CharacterPortrait ?? characterData.CharacterIcon;
-                    player2Portrait.color = Color.white; // Ensure it's visible
+                    player2Portrait.color = Color.white;
                 }
 
                 if (player2CharacterName != null)

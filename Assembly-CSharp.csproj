@@ -114,6 +114,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\KCCProcessorProvider.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCQuaternionExtensions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\ScriptableKCCProcessor.cs" />
+    <Compile Include="Assets\_GAME\Scripts\CharacterSelectionDebug.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\Collections\KCCCollisions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkEnum.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCShapeCastInfo.cs" />

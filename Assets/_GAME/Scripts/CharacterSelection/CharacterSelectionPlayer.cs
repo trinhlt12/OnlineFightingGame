@@ -9,25 +9,41 @@ public class CharacterSelectionPlayer : NetworkBehaviour
         base.Spawned();
         if (HasInputAuthority)
         {
-            Debug.Log("This CharacterSelectionPlayer belongs to me (local client)");
+            Debug.Log($"This CharacterSelectionPlayer belongs to me (local client) - InputAuthority: {Object.InputAuthority}");
         }
         else
         {
-            Debug.Log("CharacterSelectionPlayer for another player");
+            Debug.Log($"CharacterSelectionPlayer for another player - InputAuthority: {Object.InputAuthority}");
         }
     }
 
     // Single RPC method for character selection
     [Rpc(sources: RpcSources.InputAuthority, targets: RpcTargets.StateAuthority)]
-    public void RPC_RequestCharacterSelection(int characterIndex, RpcInfo info = default)
+    public void RPC_RequestCharacterSelection(int characterIndex)
     {
-        var playerRef = info.Source;
+        // Use Object.InputAuthority instead of RpcInfo.Source for more reliability
+        var playerRef = Object.InputAuthority;
 
         Debug.Log($"[CharacterSelectionPlayer] Received character selection request: Player {playerRef}, Character {characterIndex}");
 
-        // Directly call the state method
+        // Validate PlayerRef
+        if (playerRef == PlayerRef.None)
+        {
+            Debug.LogError("[CharacterSelectionPlayer] Invalid PlayerRef (PlayerNone)!");
+            return;
+        }
+
+        // Ensure player is in the dictionary before trying to set selection
         if (CharacterSelectionState.Instance != null)
         {
+            // Check if player exists, if not add them
+            var selections = CharacterSelectionState.Instance.GetPlayerSelections();
+            if (!selections.ContainsKey(playerRef))
+            {
+                Debug.LogWarning($"[CharacterSelectionPlayer] Player {playerRef} not found in selections, triggering PlayerJoined");
+                CharacterSelectionState.Instance.PlayerJoined(playerRef);
+            }
+
             CharacterSelectionState.Instance.SetCharacterSelection(playerRef, characterIndex);
         }
         else
