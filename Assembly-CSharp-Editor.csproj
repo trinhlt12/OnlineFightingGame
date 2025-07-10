@@ -52,7 +52,6 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Editor\StatsRecorderEditor.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Editor\KCCProcessorReferenceDrawer.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Editor\DisabledInPlayModeDrawer.cs" />
-    <Compile Include="Assets\_GAME\Scripts\Editor\CourseGeneratorEditor.cs" />
     <None Include="Library\PackageCache\com.unity.collab-proxy@2.2.0\Lib\Editor\PlasticSCM\Localization\commontypes.ko.txt" />
     <None Include="Library\PackageCache\com.unity.collab-proxy@2.2.0\Lib\Editor\PlasticSCM\Localization\workspaceserver.zh-Hant.txt" />
     <None Include="Library\PackageCache\com.unity.collab-proxy@2.2.0\Lib\Editor\PlasticSCM\Localization\cm-help.en.txt" />
