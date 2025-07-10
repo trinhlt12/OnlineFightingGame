@@ -17,7 +17,7 @@ public class CharacterSelectionPlayer : NetworkBehaviour
         }
     }
 
-    // Single RPC method for character selection
+    // RPC method for character selection
     [Rpc(sources: RpcSources.InputAuthority, targets: RpcTargets.StateAuthority)]
     public void RPC_RequestCharacterSelection(int characterIndex)
     {
@@ -45,6 +45,74 @@ public class CharacterSelectionPlayer : NetworkBehaviour
             }
 
             CharacterSelectionState.Instance.SetCharacterSelection(playerRef, characterIndex);
+        }
+        else
+        {
+            Debug.LogError("[CharacterSelectionPlayer] CharacterSelectionState.Instance is null!");
+        }
+    }
+
+    // RPC method for ready state
+    [Rpc(sources: RpcSources.InputAuthority, targets: RpcTargets.StateAuthority)]
+    public void RPC_RequestReadyToggle(bool isReady)
+    {
+        var playerRef = Object.InputAuthority;
+
+        Debug.Log($"[CharacterSelectionPlayer] Received ready toggle request: Player {playerRef}, IsReady {isReady}");
+
+        // Validate PlayerRef
+        if (playerRef == PlayerRef.None)
+        {
+            Debug.LogError("[CharacterSelectionPlayer] Invalid PlayerRef (PlayerNone)!");
+            return;
+        }
+
+        // Ensure player is in the dictionary before trying to set ready state
+        if (CharacterSelectionState.Instance != null)
+        {
+            var selections = CharacterSelectionState.Instance.GetPlayerSelections();
+            if (!selections.ContainsKey(playerRef))
+            {
+                Debug.LogWarning($"[CharacterSelectionPlayer] Player {playerRef} not found in selections, triggering PlayerJoined");
+                CharacterSelectionState.Instance.PlayerJoined(playerRef);
+            }
+
+            CharacterSelectionState.Instance.SetPlayerReady(playerRef, isReady);
+        }
+        else
+        {
+            Debug.LogError("[CharacterSelectionPlayer] CharacterSelectionState.Instance is null!");
+        }
+    }
+
+    // RPC method for starting the game (Host only)
+    [Rpc(sources: RpcSources.InputAuthority, targets: RpcTargets.StateAuthority)]
+    public void RPC_RequestStartGame()
+    {
+        var playerRef = Object.InputAuthority;
+
+        Debug.Log($"[CharacterSelectionPlayer] Received start game request from Player {playerRef}");
+
+        // Only allow if this is coming from the host
+        if (!HasStateAuthority || Object.InputAuthority != Runner.LocalPlayer)
+        {
+            Debug.LogWarning("[CharacterSelectionPlayer] Start game request denied - not from host");
+            return;
+        }
+
+        if (CharacterSelectionState.Instance != null)
+        {
+            if (CharacterSelectionState.Instance.CanStartGame())
+            {
+                Debug.Log("[CharacterSelectionPlayer] Starting game...");
+                // TODO: Implement game start logic here
+                // For example: SceneManager.LoadScene("GameScene");
+                // Or trigger a game start event
+            }
+            else
+            {
+                Debug.LogWarning("[CharacterSelectionPlayer] Cannot start game - not all players ready");
+            }
         }
         else
         {

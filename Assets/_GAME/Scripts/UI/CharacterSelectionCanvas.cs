@@ -1,88 +1,93 @@
+using System.Collections.Generic;
+using System.Linq;
+using _GAME.Scripts.CharacterSelection;
+using _GAME.Scripts.Data;
+using Fusion;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
 namespace UI
 {
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Linq;
-    using _GAME.Scripts.CharacterSelection;
-    using _GAME.Scripts.Data;
-    using Fusion;
-    using TMPro;
-    using UnityEngine;
-    using UnityEngine.UI;
-
-    public class CharacterSelectionCanvas : UICanvas
+    public class CharacterSelectionCanvas : MonoBehaviour
     {
-        [Header("Character Selection")]
-        [SerializeField] private CharacterData[] characterOptions;
-        [SerializeField] private CharacterSelectionButton buttonPrefab;
-        [SerializeField] private Transform buttonContainer; // Reference to HorizontalLayout - ButtonContainer
-
-        [Header("Player 1 Display")]
-        [SerializeField] private Image player1Portrait;
-        [SerializeField] private TextMeshProUGUI player1CharacterName;
-        [SerializeField] private TextMeshProUGUI player1PlayerName;
-        [SerializeField] private GameObject player1ReadyIndicator;
-        [SerializeField] private TextMeshProUGUI player1SelectionStatus;
-        [SerializeField] private CharacterStatsDisplay player1StatsDisplay;
-
-        [Header("Player 2 Display")]
-        [SerializeField] private Image player2Portrait;
-        [SerializeField] private TextMeshProUGUI player2CharacterName;
-        [SerializeField] private TextMeshProUGUI player2PlayerName;
-        [SerializeField] private GameObject player2ReadyIndicator;
-        [SerializeField] private TextMeshProUGUI player2SelectionStatus;
-        [SerializeField] private CharacterStatsDisplay player2StatsDisplay;
-
-        [Header("Character Info")]
-        [SerializeField] private TextMeshProUGUI characterInfoText;
-
-        [Header("UI Controls")]
-        [SerializeField] private Button readyButton;
+        [Header("UI References")]
+        [SerializeField] private GameObject player1Display;
+        [SerializeField] private GameObject player2Display;
+        [SerializeField] private Button startButton;
         [SerializeField] private Button backButton;
+        [SerializeField] private Button readyButton;
         [SerializeField] private TextMeshProUGUI statusText;
 
-        private NetworkRunner _runner;
-        private CharacterSelectionPlayer _localSelectionPlayer;
-        private bool _isInitialized = false;
-        private List<CharacterSelectionButton> _characterButtons = new List<CharacterSelectionButton>();
-        private int _selectedCharacterIndex = -1;
+        [Header("Player Display Components")]
+        [SerializeField] private PlayerDisplayUI player1UI;
+        [SerializeField] private PlayerDisplayUI player2UI;
 
-        // State tracking to avoid unnecessary updates
-        private int _lastPlayer1CharacterIndex = -1;
-        private int _lastPlayer2CharacterIndex = -1;
+        [Header("Character Selection")]
+        [SerializeField] private Transform characterSelectionContainer;
+        [SerializeField] private GameObject characterButtonPrefab;
+
+        [Header("Character Data")]
+        [SerializeField] private CharacterData[] availableCharacters;
+
+        private NetworkRunner _runner;
+        private CharacterSelectionPlayer _localPlayer;
+        private List<CharacterSelectionButton> _characterButtons = new List<CharacterSelectionButton>();
+        private bool _isInitialized = false;
+        private bool _isLocalPlayerReady = false;
 
         public bool IsInitialized => _isInitialized;
 
-        private void Start()
-        {
-            SetupUI();
-            StartCoroutine(InitializeWhenReady());
-        }
-
-        private void SetupUI()
+        private void Awake()
         {
             // Setup button listeners
+            if (startButton != null)
+            {
+                startButton.onClick.AddListener(OnStartButtonClicked);
+                startButton.gameObject.SetActive(false); // Hidden by default
+            }
+
             if (readyButton != null)
                 readyButton.onClick.AddListener(OnReadyButtonClicked);
 
             if (backButton != null)
                 backButton.onClick.AddListener(OnBackButtonClicked);
-
-            // Create character selection buttons dynamically
-            CreateCharacterButtons();
-
-            // Initialize displays
-            ResetPlayerDisplays();
         }
 
-        private void CreateCharacterButtons()
+        public void InitializeFromBridge()
         {
-            if (buttonPrefab == null || buttonContainer == null || characterOptions == null)
+            if (_isInitialized) return;
+
+            _runner = FindObjectOfType<NetworkRunner>();
+            if (_runner == null)
             {
-                Debug.LogError("[CharacterSelectionCanvas] Missing button prefab, container, or character options");
+                Debug.LogError("[CharacterSelectionCanvas] NetworkRunner not found!");
                 return;
             }
+
+            _localPlayer = FindLocalCharacterSelectionPlayer();
+            if (_localPlayer == null)
+            {
+                Debug.LogError("[CharacterSelectionCanvas] Local CharacterSelectionPlayer not found!");
+                return;
+            }
+
+            SetupCharacterSelection();
+            UpdateUI();
+
+            _isInitialized = true;
+            Debug.Log("[CharacterSelectionCanvas] Initialized successfully");
+        }
+
+        private CharacterSelectionPlayer FindLocalCharacterSelectionPlayer()
+        {
+            var players = FindObjectsOfType<CharacterSelectionPlayer>();
+            return players.FirstOrDefault(p => p.Object.HasInputAuthority);
+        }
+
+        private void SetupCharacterSelection()
+        {
+            if (characterSelectionContainer == null || characterButtonPrefab == null) return;
 
             // Clear existing buttons
             foreach (var button in _characterButtons)
@@ -91,433 +96,255 @@ namespace UI
             }
             _characterButtons.Clear();
 
-            // Create buttons for each character
-            for (int i = 0; i < characterOptions.Length; i++)
+            // Create character selection buttons
+            for (int i = 0; i < availableCharacters.Length; i++)
             {
-                var characterData = characterOptions[i];
-                if (characterData == null) continue;
-
-                var buttonObj = Instantiate(buttonPrefab, buttonContainer);
+                var characterData = availableCharacters[i];
+                var buttonObj = Instantiate(characterButtonPrefab, characterSelectionContainer);
                 var button = buttonObj.GetComponent<CharacterSelectionButton>();
 
-                button.Initialize(characterData, i);
-                button.OnCharacterSelected += OnCharacterButtonClicked;
-
-                _characterButtons.Add(button);
+                if (button != null)
+                {
+                    button.Initialize(characterData, i);
+                    button.OnCharacterSelected += OnCharacterSelected;
+                    _characterButtons.Add(button);
+                }
             }
-
-            Debug.Log($"[CharacterSelectionCanvas] Created {_characterButtons.Count} character buttons");
         }
 
-        private IEnumerator InitializeWhenReady()
+        public void CheckForNetworkStateChanges()
         {
-            // Wait for NetworkRunner
-            yield return new WaitUntil(() => FindObjectOfType<NetworkRunner>() != null);
-            _runner = FindObjectOfType<NetworkRunner>();
-
-            // Wait for CharacterSelectionState
-            yield return new WaitUntil(() => CharacterSelectionState.Instance != null);
-
-            // Subscribe to events
-            CharacterSelectionState.Instance.OnStateSpawned += OnStateSpawned;
-            CharacterSelectionState.Instance.OnSelectionChanged += OnSelectionChanged;
-
-            // Wait for local player
-            yield return new WaitUntil(() => FindLocalSelectionPlayer() != null);
-            _localSelectionPlayer = FindLocalSelectionPlayer();
-
-            _isInitialized = true;
-            Debug.Log("[CharacterSelectionCanvas] Initialization complete");
-
-            // Initial UI update
-            UpdatePlayerDisplays();
-            UpdateReadyButton();
+            if (!_isInitialized) return;
+            UpdateUI();
         }
 
-        private CharacterSelectionPlayer FindLocalSelectionPlayer()
-        {
-            return FindObjectsOfType<CharacterSelectionPlayer>()
-                .FirstOrDefault(p => p.Object != null && p.Object.HasInputAuthority);
-        }
-
-        private void OnStateSpawned()
-        {
-            Debug.Log("[CharacterSelectionCanvas] OnStateSpawned event received");
-            UpdatePlayerDisplays();
-        }
-
-        private void OnSelectionChanged()
-        {
-            Debug.Log("[CharacterSelectionCanvas] OnSelectionChanged event received");
-
-            // Only update if initialized
-            if (!_isInitialized)
-            {
-                Debug.LogWarning("[CharacterSelectionCanvas] OnSelectionChanged called but not initialized yet");
-                return;
-            }
-
-            UpdatePlayerDisplays();
-            UpdateCharacterButtonStates();
-            UpdateReadyButton();
-        }
-
-        private void OnCharacterButtonClicked(int characterIndex)
-        {
-            if (!_isInitialized)
-            {
-                Debug.LogWarning("[CharacterSelectionCanvas] Canvas not initialized yet");
-                return;
-            }
-
-            if (_localSelectionPlayer == null)
-            {
-                Debug.LogError("[CharacterSelectionCanvas] Local selection player is null");
-                return;
-            }
-
-            Debug.Log($"[CharacterSelectionCanvas] Character button clicked: {characterIndex}");
-
-            // Update local selection immediately for responsive UI
-            _selectedCharacterIndex = characterIndex;
-
-            // Update character info immediately
-            UpdateCharacterInfo(characterIndex);
-
-            // Update button states immediately
-            UpdateCharacterButtonStates();
-
-            // Update local player display immediately
-            UpdateLocalPlayerDisplay(characterIndex);
-
-            // Send to network
-            _localSelectionPlayer.RPC_RequestCharacterSelection(characterIndex);
-        }
-
-        private void UpdateCharacterButtonStates()
+        private void UpdateUI()
         {
             if (CharacterSelectionState.Instance == null) return;
 
             var selections = CharacterSelectionState.Instance.GetPlayerSelections();
-            var selectedIndices = new HashSet<int>();
+            var isHost = _runner != null && _runner.IsServer;
 
-            // Collect all selected character indices
-            foreach (var kvp in selections)
+            // Update player displays
+            UpdatePlayerDisplays(selections);
+
+            // Update character selection buttons
+            UpdateCharacterButtons(selections);
+
+            // Update start button visibility
+            UpdateStartButton(isHost, selections);
+
+            // Update ready button
+            UpdateReadyButton();
+
+            // Update status text
+            UpdateStatusText(selections);
+        }
+
+        private void UpdatePlayerDisplays(IReadOnlyDictionary<PlayerRef, PlayerSelectionData> selections)
+        {
+            var playerRefs = selections.Keys.ToArray();
+
+            // Update Player 1 Display
+            if (playerRefs.Length > 0 && player1UI != null)
             {
-                if (kvp.Value.CharacterIndex >= 0)
-                {
-                    selectedIndices.Add(kvp.Value.CharacterIndex);
-                }
+                var player1Data = selections[playerRefs[0]];
+                bool isLocalPlayer = _runner.LocalPlayer == playerRefs[0];
+                player1UI.UpdateDisplay(playerRefs[0], player1Data, availableCharacters, isLocalPlayer);
             }
 
-            // Update button states
+            // Update Player 2 Display
+            if (playerRefs.Length > 1 && player2UI != null)
+            {
+                var player2Data = selections[playerRefs[1]];
+                bool isLocalPlayer = _runner.LocalPlayer == playerRefs[1];
+                player2UI.UpdateDisplay(playerRefs[1], player2Data, availableCharacters, isLocalPlayer);
+            }
+        }
+
+        private void UpdateCharacterButtons(IReadOnlyDictionary<PlayerRef, PlayerSelectionData> selections)
+        {
+            var selectedCharacters = selections.Values.Select(data => data.CharacterIndex).ToHashSet();
+
             for (int i = 0; i < _characterButtons.Count; i++)
             {
                 var button = _characterButtons[i];
-                var isSelected = i == _selectedCharacterIndex;
-                var isLockedByOther = selectedIndices.Contains(i) && !isSelected;
+                if (button == null) continue;
 
-                button.SetSelected(isSelected);
-                button.SetLocked(isLockedByOther);
+                // Check if this character is selected by local player
+                var localPlayerData = selections.FirstOrDefault(kvp => kvp.Key == _runner.LocalPlayer);
+                bool isSelectedByLocal = localPlayerData.Key != PlayerRef.None && localPlayerData.Value.CharacterIndex == i;
+
+                // Check if this character is locked (selected by someone else)
+                bool isLocked = selectedCharacters.Contains(i) && !isSelectedByLocal;
+
+                button.SetSelected(isSelectedByLocal);
+                button.SetLocked(isLocked);
             }
         }
 
-        private void UpdatePlayerDisplays()
+        private void UpdateStartButton(bool isHost, IReadOnlyDictionary<PlayerRef, PlayerSelectionData> selections)
         {
-            if (CharacterSelectionState.Instance == null)
-            {
-                Debug.LogWarning("[CharacterSelectionCanvas] CharacterSelectionState is null, skipping update");
-                return;
-            }
+            if (startButton == null) return;
 
-            var selections = CharacterSelectionState.Instance.GetPlayerSelections();
-
-            Debug.Log($"[CharacterSelectionCanvas] UpdatePlayerDisplays called - {selections.Count} players");
-
-            // Track which slots have been updated to avoid unnecessary resets
-            bool player1Updated = false;
-            bool player2Updated = false;
-
-            // Update each player's display
-            foreach (var kvp in selections)
-            {
-                var player = kvp.Key;
-                var data = kvp.Value;
-                var characterData = GetCharacterData(data.CharacterIndex);
-                var isLocalPlayer = _runner != null && _runner.LocalPlayer == player;
-
-                if (data.Slot == 1)
-                {
-                    UpdatePlayer1Display(characterData, player, isLocalPlayer);
-                    player1Updated = true;
-                }
-                else if (data.Slot == 2)
-                {
-                    UpdatePlayer2Display(characterData, player, isLocalPlayer);
-                    player2Updated = true;
-                }
-            }
-
-            // Only reset displays that haven't been updated (empty slots)
-            if (!player1Updated)
-            {
-                ResetPlayer1Display();
-            }
-
-            if (!player2Updated)
-            {
-                ResetPlayer2Display();
-            }
-        }
-
-        private void ResetPlayerDisplays()
-        {
-            ResetPlayer1Display();
-            ResetPlayer2Display();
-        }
-
-        private void ResetPlayer1Display()
-        {
-            if (player1Portrait != null) player1Portrait.sprite = null;
-            if (player1CharacterName != null) player1CharacterName.text = "";
-            if (player1PlayerName != null) player1PlayerName.text = "Waiting...";
-            if (player1ReadyIndicator != null) player1ReadyIndicator.SetActive(false);
-            if (player1SelectionStatus != null) player1SelectionStatus.text = "Selecting...";
-            if (player1StatsDisplay != null) player1StatsDisplay.Reset();
-        }
-
-        private void ResetPlayer2Display()
-        {
-            if (player2Portrait != null) player2Portrait.sprite = null;
-            if (player2CharacterName != null) player2CharacterName.text = "";
-            if (player2PlayerName != null) player2PlayerName.text = "Waiting...";
-            if (player2ReadyIndicator != null) player2ReadyIndicator.SetActive(false);
-            if (player2SelectionStatus != null) player2SelectionStatus.text = "Selecting...";
-            if (player2StatsDisplay != null) player2StatsDisplay.Reset();
-        }
-
-        private void UpdatePlayer1Display(CharacterData characterData, PlayerRef player, bool isLocalPlayer)
-        {
-            int characterIndex = characterData != null ? System.Array.IndexOf(characterOptions, characterData) : -1;
-
-            // Only update if character actually changed
-            if (_lastPlayer1CharacterIndex == characterIndex)
-            {
-                return; // No change, skip update
-            }
-
-            _lastPlayer1CharacterIndex = characterIndex;
-
-            if (characterData != null)
-            {
-                if (player1Portrait != null)
-                {
-                    player1Portrait.sprite = characterData.CharacterPortrait ?? characterData.CharacterIcon;
-                    player1Portrait.color = Color.white;
-                }
-
-                if (player1CharacterName != null)
-                    player1CharacterName.text = characterData.CharacterName;
-
-                if (player1SelectionStatus != null)
-                    player1SelectionStatus.text = "Selected!";
-
-                // Update stats display
-                if (player1StatsDisplay != null && characterData.Stats != null)
-                {
-                    player1StatsDisplay.UpdateStats(characterData.Stats);
-                }
-            }
-            else
-            {
-                if (player1SelectionStatus != null)
-                    player1SelectionStatus.text = "Selecting...";
-
-                // Reset stats when no character selected
-                if (player1StatsDisplay != null)
-                    player1StatsDisplay.Reset();
-            }
-
-            if (player1PlayerName != null)
-                player1PlayerName.text = isLocalPlayer ? "You" : $"Player {player}";
-
-            Debug.Log($"[CharacterSelectionCanvas] Updated Player 1 Display - Character: {characterData?.CharacterName}, IsLocal: {isLocalPlayer}");
-        }
-
-        private void UpdatePlayer2Display(CharacterData characterData, PlayerRef player, bool isLocalPlayer)
-        {
-            int characterIndex = characterData != null ? System.Array.IndexOf(characterOptions, characterData) : -1;
-
-            // Only update if character actually changed
-            if (_lastPlayer2CharacterIndex == characterIndex)
-            {
-                return; // No change, skip update
-            }
-
-            _lastPlayer2CharacterIndex = characterIndex;
-
-            if (characterData != null)
-            {
-                if (player2Portrait != null)
-                {
-                    player2Portrait.sprite = characterData.CharacterPortrait ?? characterData.CharacterIcon;
-                    player2Portrait.color = Color.white;
-                }
-
-                if (player2CharacterName != null)
-                    player2CharacterName.text = characterData.CharacterName;
-
-                if (player2SelectionStatus != null)
-                    player2SelectionStatus.text = "Selected!";
-
-                // Update stats display
-                if (player2StatsDisplay != null && characterData.Stats != null)
-                {
-                    player2StatsDisplay.UpdateStats(characterData.Stats);
-                }
-            }
-            else
-            {
-                if (player2SelectionStatus != null)
-                    player2SelectionStatus.text = "Selecting...";
-
-                // Reset stats when no character selected
-                if (player2StatsDisplay != null)
-                    player2StatsDisplay.Reset();
-            }
-
-            if (player2PlayerName != null)
-                player2PlayerName.text = isLocalPlayer ? "You" : $"Player {player}";
-
-            Debug.Log($"[CharacterSelectionCanvas] Updated Player 2 Display - Character: {characterData?.CharacterName}, IsLocal: {isLocalPlayer}");
-        }
-
-        private void UpdateLocalPlayerDisplay(int characterIndex)
-        {
-            var characterData = GetCharacterData(characterIndex);
-            if (characterData == null) return;
-
-            // Find which slot this local player is in
-            if (CharacterSelectionState.Instance != null && _runner != null)
-            {
-                var selections = CharacterSelectionState.Instance.GetPlayerSelections();
-                foreach (var kvp in selections)
-                {
-                    if (kvp.Key == _runner.LocalPlayer)
-                    {
-                        if (kvp.Value.Slot == 1)
-                        {
-                            UpdatePlayer1Display(characterData, kvp.Key, true);
-                        }
-                        else if (kvp.Value.Slot == 2)
-                        {
-                            UpdatePlayer2Display(characterData, kvp.Key, true);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        private void UpdateCharacterInfo(int characterIndex)
-        {
-            var characterData = GetCharacterData(characterIndex);
-            if (characterData != null && characterInfoText != null)
-            {
-                string info = $"Selected: {characterData.CharacterName}";
-                if (!string.IsNullOrEmpty(characterData.CharacterDescription))
-                {
-                    info += $"\n{characterData.CharacterDescription}";
-                }
-
-                characterInfoText.text = info;
-            }
-        }
-
-        private CharacterData GetCharacterData(int characterIndex)
-        {
-            if (characterIndex >= 0 && characterIndex < characterOptions.Length)
-            {
-                return characterOptions[characterIndex];
-            }
-            return null;
+            bool canStart = isHost && CharacterSelectionState.Instance.CanStartGame();
+            startButton.gameObject.SetActive(canStart);
         }
 
         private void UpdateReadyButton()
         {
             if (readyButton == null) return;
 
-            bool canReady = _selectedCharacterIndex >= 0;
-            readyButton.interactable = canReady;
-
-            // Update status text
-            if (statusText != null)
+            var localPlayerData = GetLocalPlayerData();
+            if (localPlayerData.HasValue)
             {
-                if (!canReady)
+                _isLocalPlayerReady = localPlayerData.Value.IsReady;
+                var buttonText = readyButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (buttonText != null)
                 {
-                    statusText.text = "Select a character to continue";
+                    buttonText.text = _isLocalPlayerReady ? "Unready" : "Ready";
                 }
-                else if (CharacterSelectionState.Instance?.IsAllPlayersReady() == true)
-                {
-                    statusText.text = "All players ready! Starting match...";
-                }
-                else
-                {
-                    statusText.text = "Waiting for other players...";
-                }
+
+                // Only allow ready if character is selected
+                readyButton.interactable = localPlayerData.Value.CharacterIndex >= 0;
             }
+        }
+
+        private void UpdateStatusText(IReadOnlyDictionary<PlayerRef, PlayerSelectionData> selections)
+        {
+            if (statusText == null) return;
+
+            if (selections.Count < 2)
+            {
+                statusText.text = "Waiting for players...";
+            }
+            else if (CharacterSelectionState.Instance.CanStartGame())
+            {
+                statusText.text = _runner.IsServer ? "Ready to start!" : "Waiting for host to start...";
+            }
+            else
+            {
+                var readyCount = selections.Values.Count(data => data.IsReady && data.CharacterIndex >= 0);
+                statusText.text = $"Players ready: {readyCount}/{selections.Count}";
+            }
+        }
+
+        private PlayerSelectionData? GetLocalPlayerData()
+        {
+            if (CharacterSelectionState.Instance == null || _runner == null) return null;
+
+            var selections = CharacterSelectionState.Instance.GetPlayerSelections();
+            if (selections.TryGetValue(_runner.LocalPlayer, out var data))
+            {
+                return data;
+            }
+            return null;
+        }
+
+        private void OnCharacterSelected(int characterIndex)
+        {
+            if (_localPlayer == null) return;
+
+            Debug.Log($"[CharacterSelectionCanvas] Character {characterIndex} selected");
+            _localPlayer.RPC_RequestCharacterSelection(characterIndex);
         }
 
         private void OnReadyButtonClicked()
         {
-            Debug.Log("[CharacterSelectionCanvas] Ready button clicked");
-            // TODO: Implement ready state logic
+            if (_localPlayer == null) return;
+
+            var localPlayerData = GetLocalPlayerData();
+            if (localPlayerData.HasValue && localPlayerData.Value.CharacterIndex >= 0)
+            {
+                bool newReadyState = !_isLocalPlayerReady;
+                Debug.Log($"[CharacterSelectionCanvas] Ready button clicked - new state: {newReadyState}");
+                _localPlayer.RPC_RequestReadyToggle(newReadyState);
+            }
+        }
+
+        private void OnStartButtonClicked()
+        {
+            if (_localPlayer == null || !_runner.IsServer) return;
+
+            Debug.Log("[CharacterSelectionCanvas] Start button clicked");
+            _localPlayer.RPC_RequestStartGame();
         }
 
         private void OnBackButtonClicked()
         {
             Debug.Log("[CharacterSelectionCanvas] Back button clicked");
-            // TODO: Implement back to menu logic
+            // TODO: Implement back to main menu logic
         }
 
         private void OnDestroy()
         {
-            // Unsubscribe from events
-            if (CharacterSelectionState.Instance != null)
-            {
-                CharacterSelectionState.Instance.OnStateSpawned -= OnStateSpawned;
-                CharacterSelectionState.Instance.OnSelectionChanged -= OnSelectionChanged;
-            }
-
-            // Clean up button events
+            // Clean up button listeners
             foreach (var button in _characterButtons)
             {
                 if (button != null)
                 {
-                    button.OnCharacterSelected -= OnCharacterButtonClicked;
+                    button.OnCharacterSelected -= OnCharacterSelected;
                 }
             }
         }
+    }
 
-        // Legacy methods for compatibility
-        public void CheckForNetworkStateChanges()
+    [System.Serializable]
+    public class PlayerDisplayUI
+    {
+        [Header("Player Display References")]
+        public TextMeshProUGUI playerNameText;
+        public TextMeshProUGUI characterNameText;
+        public Image characterIcon;
+        public GameObject readyIndicator;
+        public TextMeshProUGUI selectionStatusText;
+
+        public void UpdateDisplay(PlayerRef playerRef, PlayerSelectionData playerData, CharacterData[] availableCharacters, bool isLocalPlayer)
         {
-            if (_isInitialized)
+            // Update player name
+            if (playerNameText != null)
             {
-                UpdatePlayerDisplays();
-                UpdateCharacterButtonStates();
+                string playerName = isLocalPlayer ? "You" : $"Player {playerData.Slot}";
+                playerNameText.text = playerName;
             }
-        }
 
-        public void InitializeFromBridge()
-        {
-            if (!_isInitialized && CharacterSelectionState.Instance != null)
+            // Update character info
+            if (playerData.CharacterIndex >= 0 && playerData.CharacterIndex < availableCharacters.Length)
             {
-                _runner = FindObjectOfType<NetworkRunner>();
-                _localSelectionPlayer = FindLocalSelectionPlayer();
-                _isInitialized = true;
-                UpdatePlayerDisplays();
-                Debug.Log("[CharacterSelectionCanvas] InitializeFromBridge completed");
+                var characterData = availableCharacters[playerData.CharacterIndex];
+
+                if (characterNameText != null)
+                    characterNameText.text = characterData.CharacterName;
+
+                if (characterIcon != null)
+                    characterIcon.sprite = characterData.CharacterIcon;
+            }
+            else
+            {
+                if (characterNameText != null)
+                    characterNameText.text = "No character selected";
+
+                if (characterIcon != null)
+                    characterIcon.sprite = null;
+            }
+
+            // Update ready indicator
+            if (readyIndicator != null)
+            {
+                readyIndicator.SetActive(playerData.IsReady);
+            }
+
+            // Update selection status
+            if (selectionStatusText != null)
+            {
+                if (playerData.CharacterIndex >= 0)
+                {
+                    selectionStatusText.text = playerData.IsReady ? "Ready!" : "Not Ready";
+                }
+                else
+                {
+                    selectionStatusText.text = "Selecting...";
+                }
             }
         }
     }

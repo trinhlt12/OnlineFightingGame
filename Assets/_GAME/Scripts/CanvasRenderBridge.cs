@@ -26,6 +26,7 @@ public class CanvasRenderBridge : NetworkBehaviour
         {
             CharacterSelectionState.Instance.OnStateSpawned += OnStateReady;
             CharacterSelectionState.Instance.OnSelectionChanged += OnSelectionChanged;
+            CharacterSelectionState.Instance.OnReadyStateChanged += OnReadyStateChanged;
             _isSubscribed = true;
             Debug.Log($"[CanvasRenderBridge] Subscribed to state events on {(HasStateAuthority ? "Host" : "Client")}");
         }
@@ -58,6 +59,17 @@ public class CanvasRenderBridge : NetworkBehaviour
         }
     }
 
+    private void OnReadyStateChanged()
+    {
+        Debug.Log($"[CanvasRenderBridge] OnReadyStateChanged called on {(HasStateAuthority ? "Host" : "Client")}");
+
+        // Force UI update when ready state changes
+        if (_canvas != null && _canvas.IsInitialized)
+        {
+            _canvas.CheckForNetworkStateChanges();
+        }
+    }
+
     public override void Render()
     {
         // Only update when necessary, not every frame
@@ -71,6 +83,7 @@ public class CanvasRenderBridge : NetworkBehaviour
         {
             CharacterSelectionState.Instance.OnStateSpawned -= OnStateReady;
             CharacterSelectionState.Instance.OnSelectionChanged -= OnSelectionChanged;
+            CharacterSelectionState.Instance.OnReadyStateChanged -= OnReadyStateChanged;
         }
     }
 

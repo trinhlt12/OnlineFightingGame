@@ -10,9 +10,10 @@ namespace _GAME.Scripts.CharacterSelection
     {
         public static CharacterSelectionState Instance { get; private set; }
 
-        // Event for UI updates
+        // Events for UI updates
         public event Action OnSelectionChanged;
         public event Action OnStateSpawned;
+        public event Action OnReadyStateChanged;
 
         [Networked, Capacity(2)]
         private NetworkDictionary<PlayerRef, PlayerSelectionData> PlayerSelections => default;
@@ -48,6 +49,7 @@ namespace _GAME.Scripts.CharacterSelection
                     {
                         Debug.Log($"[CharacterSelectionState] Selection change detected on {(HasStateAuthority ? "Host" : "Client")}, notifying UI");
                         OnSelectionChanged?.Invoke();
+                        OnReadyStateChanged?.Invoke();
                         break;
                     }
                 }
@@ -62,13 +64,15 @@ namespace _GAME.Scripts.CharacterSelection
                 PlayerSelections.Add(player, new PlayerSelectionData
                 {
                     Slot = slotNumber,
-                    CharacterIndex = -1
+                    CharacterIndex = -1,
+                    IsReady = false
                 });
 
                 Debug.Log($"Player {player} joined with slot {slotNumber}");
 
                 // Notify UI immediately
                 OnSelectionChanged?.Invoke();
+                OnReadyStateChanged?.Invoke();
             }
         }
 
@@ -80,6 +84,11 @@ namespace _GAME.Scripts.CharacterSelection
         public int GetSelectedCharacter(PlayerRef player)
         {
             return PlayerSelections.TryGet(player, out var data) ? data.CharacterIndex : -1;
+        }
+
+        public bool GetPlayerReadyState(PlayerRef player)
+        {
+            return PlayerSelections.TryGet(player, out var data) && data.IsReady;
         }
 
         // Main method for character selection - called from UI
@@ -123,6 +132,33 @@ namespace _GAME.Scripts.CharacterSelection
             OnSelectionChanged?.Invoke();
         }
 
+        // Method to set player ready state
+        public void SetPlayerReady(PlayerRef player, bool isReady)
+        {
+            Debug.Log($"[CharacterSelectionState] SetPlayerReady called - Player: {player}, IsReady: {isReady}, HasStateAuthority: {HasStateAuthority}");
+
+            if (!HasStateAuthority)
+            {
+                Debug.LogWarning($"[CharacterSelectionState] SetPlayerReady called on non-authority client - ignoring");
+                return;
+            }
+
+            if (!PlayerSelections.ContainsKey(player))
+            {
+                Debug.LogError($"[CharacterSelectionState] Player {player} not found in PlayerSelections dictionary when setting ready state");
+                return;
+            }
+
+            var data = PlayerSelections[player];
+            data.IsReady = isReady;
+            PlayerSelections.Set(player, data);
+
+            Debug.Log($"[CharacterSelectionState] Successfully updated Player {player} ready state to {isReady}");
+
+            // Notify UI
+            OnReadyStateChanged?.Invoke();
+        }
+
         public IReadOnlyDictionary<PlayerRef, PlayerSelectionData> GetPlayerSelections()
         {
             Dictionary<PlayerRef, PlayerSelectionData> copy = new();
@@ -141,9 +177,14 @@ namespace _GAME.Scripts.CharacterSelection
 
             foreach (var kvp in PlayerSelections)
             {
-                if (kvp.Value.CharacterIndex < 0) return false;
+                if (kvp.Value.CharacterIndex < 0 || !kvp.Value.IsReady) return false;
             }
             return true;
+        }
+
+        public bool CanStartGame()
+        {
+            return PlayerSelections.Count >= 2 && IsAllPlayersReady();
         }
 
         // Manual method to force UI sync - useful for debugging
@@ -151,6 +192,7 @@ namespace _GAME.Scripts.CharacterSelection
         {
             Debug.Log($"[CharacterSelectionState] ForceUISync called on {(HasStateAuthority ? "Host" : "Client")}");
             OnSelectionChanged?.Invoke();
+            OnReadyStateChanged?.Invoke();
         }
 
         // Method to get detailed selection info for debugging
@@ -161,8 +203,10 @@ namespace _GAME.Scripts.CharacterSelection
 
             foreach (var kvp in PlayerSelections)
             {
-                Debug.Log($"[CharacterSelectionState] Player {kvp.Key}: Slot {kvp.Value.Slot}, Character {kvp.Value.CharacterIndex}");
+                Debug.Log($"[CharacterSelectionState] Player {kvp.Key}: Slot {kvp.Value.Slot}, Character {kvp.Value.CharacterIndex}, Ready: {kvp.Value.IsReady}");
             }
+
+            Debug.Log($"[CharacterSelectionState] CanStartGame: {CanStartGame()}");
         }
     }
 
@@ -170,5 +214,6 @@ namespace _GAME.Scripts.CharacterSelection
     {
         public int Slot;
         public int CharacterIndex;
+        public bool IsReady;
     }
 }

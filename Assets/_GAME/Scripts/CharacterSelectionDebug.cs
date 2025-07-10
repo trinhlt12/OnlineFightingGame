@@ -7,6 +7,7 @@ public class CharacterSelectionDebug : MonoBehaviour
 {
     [Header("Debug Controls")]
     [SerializeField] private KeyCode debugKey = KeyCode.F1;
+    [SerializeField] private KeyCode forceReadyKey = KeyCode.F2;
     [SerializeField] private bool enableDebugLogs = true;
 
     private void Update()
@@ -14,6 +15,11 @@ public class CharacterSelectionDebug : MonoBehaviour
         if (Input.GetKeyDown(debugKey))
         {
             LogDebugInfo();
+        }
+
+        if (Input.GetKeyDown(forceReadyKey))
+        {
+            ForceToggleReady();
         }
     }
 
@@ -26,7 +32,7 @@ public class CharacterSelectionDebug : MonoBehaviour
         var runner = FindObjectOfType<NetworkRunner>();
         if (runner != null)
         {
-            Debug.Log($"[Debug] NetworkRunner - IsHost: IsClient: {runner.IsClient}, LocalPlayer: {runner.LocalPlayer}");
+            Debug.Log($"[Debug] NetworkRunner - IsHost: {runner.IsServer}, IsClient: {runner.IsClient}, LocalPlayer: {runner.LocalPlayer}");
             Debug.Log($"[Debug] NetworkRunner - IsRunning: {runner.IsRunning}, SessionInfo: {runner.SessionInfo?.Name}");
         }
 
@@ -40,12 +46,15 @@ public class CharacterSelectionDebug : MonoBehaviour
 
             foreach (var kvp in selections)
             {
-                Debug.Log($"[Debug] Player {kvp.Key} - Slot: {kvp.Value.Slot}, Character: {kvp.Value.CharacterIndex}");
+                Debug.Log($"[Debug] Player {kvp.Key} - Slot: {kvp.Value.Slot}, Character: {kvp.Value.CharacterIndex}, Ready: {kvp.Value.IsReady}");
 
                 // Check if this is local player
                 bool isLocal = runner != null && runner.LocalPlayer == kvp.Key;
                 Debug.Log($"[Debug] Player {kvp.Key} - IsLocal: {isLocal}");
             }
+
+            Debug.Log($"[Debug] CanStartGame: {CharacterSelectionState.Instance.CanStartGame()}");
+            Debug.Log($"[Debug] IsAllPlayersReady: {CharacterSelectionState.Instance.IsAllPlayersReady()}");
 
             // Log detailed state
             CharacterSelectionState.Instance.LogSelectionState();
@@ -89,6 +98,45 @@ public class CharacterSelectionDebug : MonoBehaviour
         {
             Debug.Log("[Debug] Forcing UI refresh...");
             canvas.CheckForNetworkStateChanges();
+        }
+    }
+
+    // Method to manually toggle ready state for debugging
+    private void ForceToggleReady()
+    {
+        var localPlayer = FindObjectsOfType<CharacterSelectionPlayer>();
+        var myPlayer = System.Array.Find(localPlayer, p => p.Object.HasInputAuthority);
+
+        if (myPlayer != null && CharacterSelectionState.Instance != null)
+        {
+            var runner = FindObjectOfType<NetworkRunner>();
+            if (runner != null)
+            {
+                bool currentReady = CharacterSelectionState.Instance.GetPlayerReadyState(runner.LocalPlayer);
+                Debug.Log($"[Debug] Force toggling ready state from {currentReady} to {!currentReady}");
+                myPlayer.RPC_RequestReadyToggle(!currentReady);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[Debug] Cannot toggle ready - local player not found");
+        }
+    }
+
+    // Method to simulate character selection for debugging
+    public void ForceSelectCharacter(int characterIndex)
+    {
+        var localPlayer = FindObjectsOfType<CharacterSelectionPlayer>();
+        var myPlayer = System.Array.Find(localPlayer, p => p.Object.HasInputAuthority);
+
+        if (myPlayer != null)
+        {
+            Debug.Log($"[Debug] Force selecting character {characterIndex}");
+            myPlayer.RPC_RequestCharacterSelection(characterIndex);
+        }
+        else
+        {
+            Debug.LogWarning("[Debug] Cannot select character - local player not found");
         }
     }
 }
