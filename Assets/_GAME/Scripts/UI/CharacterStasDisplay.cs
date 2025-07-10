@@ -31,12 +31,47 @@ namespace UI
         [SerializeField] private float animationDuration = 0.5f;
         [SerializeField] private AnimationCurve animationCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
+        [Header("Debug")]
+        [SerializeField] private bool enableDebugLogs = true;
+
         private Coroutine _animationCoroutine;
 
         private void Awake()
         {
             InitializeSliders();
             SetupLabels();
+            ValidateReferences();
+        }
+
+        private void ValidateReferences()
+        {
+            bool hasErrors = false;
+
+            if (speedBar == null)
+            {
+                Debug.LogError("[CharacterStatsDisplay] Speed bar is not assigned!", this);
+                hasErrors = true;
+            }
+            if (strengthBar == null)
+            {
+                Debug.LogError("[CharacterStatsDisplay] Strength bar is not assigned!", this);
+                hasErrors = true;
+            }
+            if (defenseBar == null)
+            {
+                Debug.LogError("[CharacterStatsDisplay] Defense bar is not assigned!", this);
+                hasErrors = true;
+            }
+            if (agilityBar == null)
+            {
+                Debug.LogError("[CharacterStatsDisplay] Agility bar is not assigned!", this);
+                hasErrors = true;
+            }
+
+            if (!hasErrors && enableDebugLogs)
+            {
+                Debug.Log("[CharacterStatsDisplay] All slider references are properly assigned.");
+            }
         }
 
         private void InitializeSliders()
@@ -52,6 +87,9 @@ namespace UI
                     slider.maxValue = 1f;
                     slider.value = 0f;
                     slider.interactable = false; // Display only
+
+                    if (enableDebugLogs)
+                        Debug.Log($"[CharacterStatsDisplay] Initialized slider: {slider.name}");
                 }
             }
         }
@@ -69,11 +107,16 @@ namespace UI
         {
             if (stats == null)
             {
+                if (enableDebugLogs)
+                    Debug.LogWarning("[CharacterStatsDisplay] Received null CharacterStats, resetting display");
                 Reset();
                 return;
             }
 
-            Debug.Log($"[CharacterStatsDisplay] Updating stats - Speed: {stats.Speed}, Strength: {stats.Strength}, Defense: {stats.Defense}, Agility: {stats.Agility}");
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[CharacterStatsDisplay] Updating stats - Speed: {stats.Speed}, Strength: {stats.Strength}, Defense: {stats.Defense}, Agility: {stats.Agility}");
+            }
 
             if (animateOnUpdate)
             {
@@ -87,11 +130,33 @@ namespace UI
 
         private void SetStatsImmediate(CharacterStats stats)
         {
-            // Update sliders
-            if (speedBar != null) speedBar.value = stats.GetSpeedNormalized();
-            if (strengthBar != null) strengthBar.value = stats.GetStrengthNormalized();
-            if (defenseBar != null) defenseBar.value = stats.GetDefenseNormalized();
-            if (agilityBar != null) agilityBar.value = stats.GetAgilityNormalized();
+            if (stats == null) return;
+
+            // Update sliders with null checks
+            if (speedBar != null)
+            {
+                speedBar.value = stats.GetSpeedNormalized();
+                if (enableDebugLogs)
+                    Debug.Log($"[CharacterStatsDisplay] Set speed bar to {stats.GetSpeedNormalized()} (raw: {stats.Speed})");
+            }
+            if (strengthBar != null)
+            {
+                strengthBar.value = stats.GetStrengthNormalized();
+                if (enableDebugLogs)
+                    Debug.Log($"[CharacterStatsDisplay] Set strength bar to {stats.GetStrengthNormalized()} (raw: {stats.Strength})");
+            }
+            if (defenseBar != null)
+            {
+                defenseBar.value = stats.GetDefenseNormalized();
+                if (enableDebugLogs)
+                    Debug.Log($"[CharacterStatsDisplay] Set defense bar to {stats.GetDefenseNormalized()} (raw: {stats.Defense})");
+            }
+            if (agilityBar != null)
+            {
+                agilityBar.value = stats.GetAgilityNormalized();
+                if (enableDebugLogs)
+                    Debug.Log($"[CharacterStatsDisplay] Set agility bar to {stats.GetAgilityNormalized()} (raw: {stats.Agility})");
+            }
 
             // Update value texts
             if (speedValue != null) speedValue.text = stats.Speed.ToString();
@@ -115,6 +180,8 @@ namespace UI
 
         private IEnumerator AnimateStatsCoroutine(CharacterStats stats)
         {
+            if (stats == null) yield break;
+
             // Store starting values
             float startSpeed = speedBar != null ? speedBar.value : 0f;
             float startStrength = strengthBar != null ? strengthBar.value : 0f;
@@ -164,6 +231,8 @@ namespace UI
 
         private void UpdateStatColors(CharacterStats stats)
         {
+            if (stats == null) return;
+
             // Update slider colors if the stats have custom colors
             if (speedBar != null && speedBar.fillRect != null)
             {
@@ -192,7 +261,8 @@ namespace UI
 
         public void Reset()
         {
-            Debug.Log("[CharacterStatsDisplay] Resetting stats display");
+            if (enableDebugLogs)
+                Debug.Log("[CharacterStatsDisplay] Resetting stats display");
 
             if (_animationCoroutine != null)
             {
@@ -231,6 +301,20 @@ namespace UI
                     if (agilityBar != null) agilityBar.value = normalizedValue;
                     break;
             }
+        }
+
+        // Debug method to manually test stats
+        [ContextMenu("Test Stats Display")]
+        public void TestStatsDisplay()
+        {
+            var testStats = new CharacterStats();
+            testStats.Speed = 7;
+            testStats.Strength = 5;
+            testStats.Defense = 8;
+            testStats.Agility = 6;
+
+            Debug.Log("[CharacterStatsDisplay] Testing stats display with sample data");
+            UpdateStats(testStats);
         }
     }
 

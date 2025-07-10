@@ -137,8 +137,8 @@
     <Compile Include="Assets\_GAME\Scripts\AudioListenerCleaner.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Accumulators\FloatAccumulator.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Depenetration.cs" />
-    <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCTraceInfo.cs" />
     <Compile Include="Assets\_GAME\Scripts\CharacterSelectionButton.cs" />
+    <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCTraceInfo.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\Collections\KCCHits.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCShapeCastHit.cs" />
     <Compile Include="Assets\_GAME\Scripts\InputManager.cs" />
@@ -552,6 +552,9 @@
     <Reference Include="Fusion.Runtime">
       <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Assets\Photon\Fusion\Assemblies\Fusion.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="DOTween">
+      <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Assets\Plugins\Demigiant\DOTween\DOTween.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
       <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Library\PackageCache\com.unity.visualscripting@1.9.1\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
     </Reference>
@@ -563,9 +566,6 @@
     </Reference>
     <Reference Include="Fusion.Realtime">
       <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Assets\Photon\Fusion\Assemblies\Fusion.Realtime.dll</HintPath>
-    </Reference>
-    <Reference Include="DOTween">
-      <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Assets\Plugins\Demigiant\DOTween\DOTween.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Android.Types">
       <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.19f1\Editor\Data\PlaybackEngines\AndroidPlayer\Unity.Android.Types.dll</HintPath>

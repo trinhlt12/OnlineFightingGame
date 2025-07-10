@@ -268,6 +268,9 @@
     <Reference Include="Fusion.Runtime">
       <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Assets\Photon\Fusion\Assemblies\Fusion.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="DOTween">
+      <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Assets\Plugins\Demigiant\DOTween\DOTween.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
       <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Library\PackageCache\com.unity.visualscripting@1.9.1\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
     </Reference>
@@ -276,9 +279,6 @@
     </Reference>
     <Reference Include="Fusion.Realtime">
       <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Assets\Photon\Fusion\Assemblies\Fusion.Realtime.dll</HintPath>
-    </Reference>
-    <Reference Include="DOTween">
-      <HintPath>D:\UNITY_PROJECTS\OnlineFightingGame\Assets\Plugins\Demigiant\DOTween\DOTween.dll</HintPath>
     </Reference>
     <Reference Include="netstandard">
       <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.19f1\Editor\Data\NetStandard\ref\2.1.0\netstandard.dll</HintPath>

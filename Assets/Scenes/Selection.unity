@@ -2166,6 +2166,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  enableDebugLogs: 1
 --- !u!114 &123055349
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11992,6 +11993,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  enableDebugLogs: 1
 --- !u!1 &996720470
 GameObject:
   m_ObjectHideFlags: 0
@@ -18048,7 +18050,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player1Display: {fileID: 2104063622}
   player2Display: {fileID: 1598057601}
-  startButton: {fileID: 0}
+  startButton: {fileID: 1420936604}
   backButton: {fileID: 1346022786}
   readyButton: {fileID: 39102353}
   statusText: {fileID: 688169881}
@@ -18058,12 +18060,14 @@ MonoBehaviour:
     characterIcon: {fileID: 308130479}
     readyIndicator: {fileID: 249824753}
     selectionStatusText: {fileID: 1173054697}
+    characterStatsDisplay: {fileID: 994423638}
   player2UI:
     playerNameText: {fileID: 1928358897}
     characterNameText: {fileID: 1470932797}
     characterIcon: {fileID: 1968729318}
     readyIndicator: {fileID: 2060520577}
     selectionStatusText: {fileID: 1780277187}
+    characterStatsDisplay: {fileID: 123055348}
   characterSelectionContainer: {fileID: 574910815}
   characterButtonPrefab: {fileID: 4843227831793010118, guid: 43d4e33a3e6890547ad9702f6f6a1f5a,
     type: 3}

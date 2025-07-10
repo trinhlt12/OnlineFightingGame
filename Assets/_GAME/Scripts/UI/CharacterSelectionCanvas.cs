@@ -123,7 +123,7 @@ namespace UI
             if (CharacterSelectionState.Instance == null) return;
 
             var selections = CharacterSelectionState.Instance.GetPlayerSelections();
-            var isHost = _runner != null && _runner.IsServer;
+            var isServer = _runner != null && _runner.IsServer;
 
             // Update player displays
             UpdatePlayerDisplays(selections);
@@ -132,7 +132,7 @@ namespace UI
             UpdateCharacterButtons(selections);
 
             // Update start button visibility
-            UpdateStartButton(isHost, selections);
+            UpdateStartButton(isServer, selections);
 
             // Update ready button
             UpdateReadyButton();
@@ -183,11 +183,11 @@ namespace UI
             }
         }
 
-        private void UpdateStartButton(bool isHost, IReadOnlyDictionary<PlayerRef, PlayerSelectionData> selections)
+        private void UpdateStartButton(bool isServer, IReadOnlyDictionary<PlayerRef, PlayerSelectionData> selections)
         {
             if (startButton == null) return;
 
-            bool canStart = isHost && CharacterSelectionState.Instance.CanStartGame();
+            bool canStart = isServer && CharacterSelectionState.Instance.CanStartGame();
             startButton.gameObject.SetActive(canStart);
         }
 
@@ -220,7 +220,7 @@ namespace UI
             }
             else if (CharacterSelectionState.Instance.CanStartGame())
             {
-                statusText.text = _runner.IsServer ? "Ready to start!" : "Waiting for host to start...";
+                statusText.text = _runner.IsServer ? "Ready to start!" : "Waiting for server to start...";
             }
             else
             {
@@ -299,6 +299,9 @@ namespace UI
         public GameObject readyIndicator;
         public TextMeshProUGUI selectionStatusText;
 
+        [Header("Character Stats Display")]
+        public CharacterStatsDisplay characterStatsDisplay;
+
         public void UpdateDisplay(PlayerRef playerRef, PlayerSelectionData playerData, CharacterData[] availableCharacters, bool isLocalPlayer)
         {
             // Update player name
@@ -308,7 +311,7 @@ namespace UI
                 playerNameText.text = playerName;
             }
 
-            // Update character info
+            // Update character info and stats
             if (playerData.CharacterIndex >= 0 && playerData.CharacterIndex < availableCharacters.Length)
             {
                 var characterData = availableCharacters[playerData.CharacterIndex];
@@ -318,6 +321,25 @@ namespace UI
 
                 if (characterIcon != null)
                     characterIcon.sprite = characterData.CharacterIcon;
+
+                // Update character stats
+                if (characterStatsDisplay != null)
+                {
+                    if (characterData.Stats != null)
+                    {
+                        Debug.Log($"[PlayerDisplayUI] Updating stats for {characterData.CharacterName} - Speed: {characterData.Stats.Speed}, Strength: {characterData.Stats.Strength}");
+                        characterStatsDisplay.UpdateStats(characterData.Stats);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[PlayerDisplayUI] Character {characterData.CharacterName} has null Stats!");
+                        characterStatsDisplay.Reset();
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"[PlayerDisplayUI] CharacterStatsDisplay is null for player {playerData.Slot}!");
+                }
             }
             else
             {
@@ -326,6 +348,13 @@ namespace UI
 
                 if (characterIcon != null)
                     characterIcon.sprite = null;
+
+                // Reset stats when no character selected
+                if (characterStatsDisplay != null)
+                {
+                    Debug.Log("[PlayerDisplayUI] Resetting stats - no character selected");
+                    characterStatsDisplay.Reset();
+                }
             }
 
             // Update ready indicator
