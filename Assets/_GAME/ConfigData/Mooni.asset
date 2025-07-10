@@ -16,7 +16,8 @@ MonoBehaviour:
   CharacterDescription: 
   CharacterIcon: {fileID: 925317725, guid: 289eb6f75c0fb174aacc57442a2a285a, type: 3}
   CharacterPortrait: {fileID: 925317725, guid: 289eb6f75c0fb174aacc57442a2a285a, type: 3}
-  characterPrefab: {fileID: 0}
+  characterPrefab: {fileID: 6816041150095701880, guid: 63b9b9b78ef268a4bb9216c695d16df1,
+    type: 3}
   PrimaryColor: {r: 1, g: 1, b: 1, a: 1}
   SecondaryColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   Stats:
