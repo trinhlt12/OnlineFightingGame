@@ -76,6 +76,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCVector3Extensions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkVector3.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\KCCUtility.cs" />
+    <Compile Include="Assets\_GAME\Scripts\UI\MapSelectionCanvas.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCTypesExtensions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkFloatArray.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\KCCRecorder.cs" />
@@ -141,6 +142,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCTraceInfo.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\Collections\KCCHits.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCShapeCastHit.cs" />
+    <Compile Include="Assets\_GAME\Scripts\GameStateManager.cs" />
     <Compile Include="Assets\_GAME\Scripts\InputManager.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\SmoothValues\SmoothVector3.cs" />
     <Compile Include="Assets\_GAME\Scripts\NetInput.cs" />

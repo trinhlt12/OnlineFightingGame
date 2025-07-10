@@ -9,32 +9,28 @@ using UnityEngine.UI;
 
 namespace UI
 {
-    public class CharacterSelectionCanvas : MonoBehaviour
+    public class CharacterSelectionCanvas : UICanvas
     {
-        [Header("UI References")]
-        [SerializeField] private GameObject player1Display;
-        [SerializeField] private GameObject player2Display;
-        [SerializeField] private Button startButton;
-        [SerializeField] private Button backButton;
-        [SerializeField] private Button readyButton;
-        [SerializeField] private TextMeshProUGUI statusText;
+        [Header("UI References")] [SerializeField] private GameObject      player1Display;
+        [SerializeField]                           private GameObject      player2Display;
+        [SerializeField]                           private Button          startButton;
+        [SerializeField]                           private Button          backButton;
+        [SerializeField]                           private Button          readyButton;
+        [SerializeField]                           private TextMeshProUGUI statusText;
 
-        [Header("Player Display Components")]
-        [SerializeField] private PlayerDisplayUI player1UI;
-        [SerializeField] private PlayerDisplayUI player2UI;
+        [Header("Player Display Components")] [SerializeField] private PlayerDisplayUI player1UI;
+        [SerializeField]                                       private PlayerDisplayUI player2UI;
 
-        [Header("Character Selection")]
-        [SerializeField] private Transform characterSelectionContainer;
-        [SerializeField] private GameObject characterButtonPrefab;
+        [Header("Character Selection")] [SerializeField] private Transform  characterSelectionContainer;
+        [SerializeField]                                 private GameObject characterButtonPrefab;
 
-        [Header("Character Data")]
-        [SerializeField] private CharacterData[] availableCharacters;
+        [Header("Character Data")] [SerializeField] private CharacterData[] availableCharacters;
 
-        private NetworkRunner _runner;
-        private CharacterSelectionPlayer _localPlayer;
-        private List<CharacterSelectionButton> _characterButtons = new List<CharacterSelectionButton>();
-        private bool _isInitialized = false;
-        private bool _isLocalPlayerReady = false;
+        private NetworkRunner                  _runner;
+        private CharacterSelectionPlayer       _localPlayer;
+        private List<CharacterSelectionButton> _characterButtons   = new List<CharacterSelectionButton>();
+        private bool                           _isInitialized      = false;
+        private bool                           _isLocalPlayerReady = false;
 
         public bool IsInitialized => _isInitialized;
 
@@ -47,11 +43,19 @@ namespace UI
                 startButton.gameObject.SetActive(false); // Hidden by default
             }
 
-            if (readyButton != null)
-                readyButton.onClick.AddListener(OnReadyButtonClicked);
+            if (readyButton != null) readyButton.onClick.AddListener(OnReadyButtonClicked);
 
-            if (backButton != null)
-                backButton.onClick.AddListener(OnBackButtonClicked);
+            if (backButton != null) backButton.onClick.AddListener(OnBackButtonClicked);
+
+            RegisterWithUIManager();
+        }
+
+        private void RegisterWithUIManager()
+        {
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.RegisterExistingUI(this);
+            }
         }
 
         public void InitializeFromBridge()
@@ -100,8 +104,8 @@ namespace UI
             for (int i = 0; i < availableCharacters.Length; i++)
             {
                 var characterData = availableCharacters[i];
-                var buttonObj = Instantiate(characterButtonPrefab, characterSelectionContainer);
-                var button = buttonObj.GetComponent<CharacterSelectionButton>();
+                var buttonObj     = Instantiate(characterButtonPrefab, characterSelectionContainer);
+                var button        = buttonObj.GetComponent<CharacterSelectionButton>();
 
                 if (button != null)
                 {
@@ -123,7 +127,7 @@ namespace UI
             if (CharacterSelectionState.Instance == null) return;
 
             var selections = CharacterSelectionState.Instance.GetPlayerSelections();
-            var isServer = _runner != null && _runner.IsServer;
+            var isServer   = _runner != null && _runner.IsServer;
 
             // Update player displays
             UpdatePlayerDisplays(selections);
@@ -148,7 +152,7 @@ namespace UI
             // Update Player 1 Display
             if (playerRefs.Length > 0 && player1UI != null)
             {
-                var player1Data = selections[playerRefs[0]];
+                var  player1Data   = selections[playerRefs[0]];
                 bool isLocalPlayer = _runner.LocalPlayer == playerRefs[0];
                 player1UI.UpdateDisplay(playerRefs[0], player1Data, availableCharacters, isLocalPlayer);
             }
@@ -156,7 +160,7 @@ namespace UI
             // Update Player 2 Display
             if (playerRefs.Length > 1 && player2UI != null)
             {
-                var player2Data = selections[playerRefs[1]];
+                var  player2Data   = selections[playerRefs[1]];
                 bool isLocalPlayer = _runner.LocalPlayer == playerRefs[1];
                 player2UI.UpdateDisplay(playerRefs[1], player2Data, availableCharacters, isLocalPlayer);
             }
@@ -172,7 +176,7 @@ namespace UI
                 if (button == null) continue;
 
                 // Check if this character is selected by local player
-                var localPlayerData = selections.FirstOrDefault(kvp => kvp.Key == _runner.LocalPlayer);
+                var  localPlayerData   = selections.FirstOrDefault(kvp => kvp.Key == _runner.LocalPlayer);
                 bool isSelectedByLocal = localPlayerData.Key != PlayerRef.None && localPlayerData.Value.CharacterIndex == i;
 
                 // Check if this character is locked (selected by someone else)
@@ -292,15 +296,13 @@ namespace UI
     [System.Serializable]
     public class PlayerDisplayUI
     {
-        [Header("Player Display References")]
-        public TextMeshProUGUI playerNameText;
-        public TextMeshProUGUI characterNameText;
-        public Image characterIcon;
-        public GameObject readyIndicator;
-        public TextMeshProUGUI selectionStatusText;
+        [Header("Player Display References")] public TextMeshProUGUI playerNameText;
+        public                                       TextMeshProUGUI characterNameText;
+        public                                       Image           characterIcon;
+        public                                       GameObject      readyIndicator;
+        public                                       TextMeshProUGUI selectionStatusText;
 
-        [Header("Character Stats Display")]
-        public CharacterStatsDisplay characterStatsDisplay;
+        [Header("Character Stats Display")] public CharacterStatsDisplay characterStatsDisplay;
 
         public void UpdateDisplay(PlayerRef playerRef, PlayerSelectionData playerData, CharacterData[] availableCharacters, bool isLocalPlayer)
         {
@@ -316,11 +318,9 @@ namespace UI
             {
                 var characterData = availableCharacters[playerData.CharacterIndex];
 
-                if (characterNameText != null)
-                    characterNameText.text = characterData.CharacterName;
+                if (characterNameText != null) characterNameText.text = characterData.CharacterName;
 
-                if (characterIcon != null)
-                    characterIcon.sprite = characterData.CharacterIcon;
+                if (characterIcon != null) characterIcon.sprite = characterData.CharacterIcon;
 
                 // Update character stats
                 if (characterStatsDisplay != null)
@@ -343,11 +343,9 @@ namespace UI
             }
             else
             {
-                if (characterNameText != null)
-                    characterNameText.text = "No character selected";
+                if (characterNameText != null) characterNameText.text = "No character selected";
 
-                if (characterIcon != null)
-                    characterIcon.sprite = null;
+                if (characterIcon != null) characterIcon.sprite = null;
 
                 // Reset stats when no character selected
                 if (characterStatsDisplay != null)

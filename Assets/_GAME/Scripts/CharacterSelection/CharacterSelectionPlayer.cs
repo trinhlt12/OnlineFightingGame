@@ -86,17 +86,17 @@ public class CharacterSelectionPlayer : NetworkBehaviour
     }
 
     // RPC method for starting the game (Host only)
-    [Rpc(sources: RpcSources.InputAuthority, targets: RpcTargets.StateAuthority)]
+    [Rpc(sources: RpcSources.InputAuthority, targets: RpcTargets.All)]
     public void RPC_RequestStartGame()
     {
         var playerRef = Object.InputAuthority;
 
         Debug.Log($"[CharacterSelectionPlayer] Received start game request from Player {playerRef}");
 
-        // Only allow if this is coming from the host
+        // Only allow if this is coming from the server
         if (!HasStateAuthority || Object.InputAuthority != Runner.LocalPlayer)
         {
-            Debug.LogWarning("[CharacterSelectionPlayer] Start game request denied - not from host");
+            Debug.LogWarning("[CharacterSelectionPlayer] Start game request denied - not from server");
             return;
         }
 
@@ -104,10 +104,10 @@ public class CharacterSelectionPlayer : NetworkBehaviour
         {
             if (CharacterSelectionState.Instance.CanStartGame())
             {
-                Debug.Log("[CharacterSelectionPlayer] Starting game...");
-                // TODO: Implement game start logic here
-                // For example: SceneManager.LoadScene("GameScene");
-                // Or trigger a game start event
+                Debug.Log("[CharacterSelectionPlayer] Starting game transition...");
+
+                // Send RPC to all clients to transition to map selection
+                RPC_TransitionToMapSelection();
             }
             else
             {
@@ -117,6 +117,23 @@ public class CharacterSelectionPlayer : NetworkBehaviour
         else
         {
             Debug.LogError("[CharacterSelectionPlayer] CharacterSelectionState.Instance is null!");
+        }
+    }
+
+    // RPC to notify all clients to transition to map selection
+    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
+    public void RPC_TransitionToMapSelection()
+    {
+        Debug.Log($"[CharacterSelectionPlayer] RPC_TransitionToMapSelection received on {(HasStateAuthority ? "Server" : "Client")}");
+
+        // Notify the UI system to transition
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.TransitionToMapSelection();
+        }
+        else
+        {
+            Debug.LogError("[CharacterSelectionPlayer] GameStateManager.Instance not found!");
         }
     }
 }
