@@ -13,5 +13,24 @@ MonoBehaviour:
   m_Name: Warrior
   m_EditorClassIdentifier: 
   CharacterName: Warrior
+  CharacterDescription: 
   CharacterIcon: {fileID: -1702774060, guid: dac16a52c7d0373468b124f88baedefe, type: 3}
+  CharacterPortrait: {fileID: -1702774060, guid: dac16a52c7d0373468b124f88baedefe,
+    type: 3}
   characterPrefab: {fileID: 0}
+  PrimaryColor: {r: 1, g: 1, b: 1, a: 1}
+  SecondaryColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  Stats:
+    Speed: 4
+    Strength: 6
+    Defense: 8
+    Agility: 3
+    SpecialAbilityName: 
+    SpecialAbilityDescription: 
+    SpecialAbilityIcon: {fileID: 0}
+    SpeedColor: {r: 0, g: 1, b: 1, a: 1}
+    StrengthColor: {r: 1, g: 0, b: 0, a: 1}
+    DefenseColor: {r: 0, g: 0, b: 1, a: 1}
+    AgilityColor: {r: 0, g: 1, b: 0, a: 1}
+  SelectionSound: {fileID: 0}
+  VoiceLine: {fileID: 0}

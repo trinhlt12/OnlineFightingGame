@@ -14,7 +14,16 @@ public class Player : NetworkBehaviour
         base.Spawned();
         if (HasStateAuthority)
         {
-            PlayerSlot = PlayerSlotManager.Instance.GetSlot(Object.InputAuthority);
+            if (CharacterSelectionState.Instance != null)
+            {
+                PlayerSlot = CharacterSelectionState.Instance.GetPlayerSlot(Object.InputAuthority);
+
+            }
+            else
+            {
+                //Fallback:
+                Debug.LogWarning("CharacterSelectionState not found. Cannot assign PlayerSlot.");
+            }
         }
 
     }
