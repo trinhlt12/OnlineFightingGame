@@ -86,7 +86,7 @@ public class CharacterSelectionPlayer : NetworkBehaviour
     }
 
     // RPC method for starting the game (Host only)
-    [Rpc(sources: RpcSources.InputAuthority, targets: RpcTargets.All)]
+    [Rpc(sources: RpcSources.InputAuthority, targets: RpcTargets.StateAuthority)]
     public void RPC_RequestStartGame()
     {
         var playerRef = Object.InputAuthority;
@@ -102,38 +102,14 @@ public class CharacterSelectionPlayer : NetworkBehaviour
 
         if (CharacterSelectionState.Instance != null)
         {
-            if (CharacterSelectionState.Instance.CanStartGame())
-            {
-                Debug.Log("[CharacterSelectionPlayer] Starting game transition...");
-
-                // Send RPC to all clients to transition to map selection
-                RPC_TransitionToMapSelection();
-            }
-            else
-            {
-                Debug.LogWarning("[CharacterSelectionPlayer] Cannot start game - not all players ready");
-            }
+            Debug.Log("[CharacterSelectionPlayer] Delegating to CharacterSelectionState for transition");
+            // Delegate to CharacterSelectionState to handle the transition
+            // This ensures proper broadcasting to all clients
+            CharacterSelectionState.Instance.TriggerGameStartTransition();
         }
         else
         {
             Debug.LogError("[CharacterSelectionPlayer] CharacterSelectionState.Instance is null!");
-        }
-    }
-
-    // RPC to notify all clients to transition to map selection
-    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
-    public void RPC_TransitionToMapSelection()
-    {
-        Debug.Log($"[CharacterSelectionPlayer] RPC_TransitionToMapSelection received on {(HasStateAuthority ? "Server" : "Client")}");
-
-        // Notify the UI system to transition
-        if (GameStateManager.Instance != null)
-        {
-            GameStateManager.Instance.TransitionToMapSelection();
-        }
-        else
-        {
-            Debug.LogError("[CharacterSelectionPlayer] GameStateManager.Instance not found!");
         }
     }
 }

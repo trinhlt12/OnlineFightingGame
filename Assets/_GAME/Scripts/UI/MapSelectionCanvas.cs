@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion;
+using _GAME.Scripts.CharacterSelection;
 
 namespace UI
 {
@@ -39,6 +40,32 @@ namespace UI
 
             if (statusText != null)
                 statusText.text = "Loading...";
+
+            // Register this UI with UIManager for proper management
+            // Note: This is important for UI loaded from Resources to be properly tracked
+            RegisterWithUIManager();
+        }
+
+        private void RegisterWithUIManager()
+        {
+            // Wait a frame to ensure UIManager is fully initialized
+            StartCoroutine(RegisterAfterFrame());
+        }
+
+        private System.Collections.IEnumerator RegisterAfterFrame()
+        {
+            yield return null; // Wait one frame for initialization
+
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.RegisterExistingUI(this);
+                if (enableDebugLogs)
+                    Debug.Log("[MapSelectionCanvas] Successfully registered with UIManager");
+            }
+            else
+            {
+                Debug.LogError("[MapSelectionCanvas] UIManager.Instance not found during registration!");
+            }
         }
 
         public override void Show()
@@ -112,11 +139,18 @@ namespace UI
             }
 
             if (enableDebugLogs)
-                Debug.Log("[MapSelectionCanvas] Start button clicked - transitioning to game");
+                Debug.Log("[MapSelectionCanvas] Start button clicked - requesting game transition through CharacterSelectionState");
 
-            // For now, just transition to game state
-            // Later this will include actual map selection logic
-            GameStateManager.Instance.TransitionToGame();
+            // Instead of calling GameStateManager directly, use the networked state manager
+            // This ensures the transition is synchronized across all clients
+            if (CharacterSelectionState.Instance != null)
+            {
+                CharacterSelectionState.Instance.TriggerFinalGameTransition();
+            }
+            else
+            {
+                Debug.LogError("[MapSelectionCanvas] CharacterSelectionState.Instance not found! Cannot synchronize game transition.");
+            }
         }
 
         private void OnBackButtonClicked()

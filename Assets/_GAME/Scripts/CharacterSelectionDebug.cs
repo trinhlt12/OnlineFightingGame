@@ -57,7 +57,9 @@ public class CharacterSelectionDebug : MonoBehaviour
             Debug.Log($"[Debug] IsAllPlayersReady: {CharacterSelectionState.Instance.IsAllPlayersReady()}");
 
             // Log detailed state
+            /*
             CharacterSelectionState.Instance.LogSelectionState();
+        */
         }
         else
         {

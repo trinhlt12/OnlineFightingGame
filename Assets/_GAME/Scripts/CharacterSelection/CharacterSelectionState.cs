@@ -47,7 +47,7 @@ namespace _GAME.Scripts.CharacterSelection
                 {
                     if (change == nameof(PlayerSelections))
                     {
-                        Debug.Log($"[CharacterSelectionState] Selection change detected on {(HasStateAuthority ? "Host" : "Client")}, notifying UI");
+                        Debug.Log($"[CharacterSelectionState] Selection change detected on {(HasStateAuthority ? "Server" : "Client")}, notifying UI");
                         OnSelectionChanged?.Invoke();
                         OnReadyStateChanged?.Invoke();
                         break;
@@ -190,15 +190,82 @@ namespace _GAME.Scripts.CharacterSelection
         // Manual method to force UI sync - useful for debugging
         public void ForceUISync()
         {
-            Debug.Log($"[CharacterSelectionState] ForceUISync called on {(HasStateAuthority ? "Host" : "Client")}");
+            Debug.Log($"[CharacterSelectionState] ForceUISync called on {(HasStateAuthority ? "Server" : "Client")}");
             OnSelectionChanged?.Invoke();
             OnReadyStateChanged?.Invoke();
+        }
+
+        // Method to trigger game start transition (Character Selection -> Map Selection)
+        public void TriggerGameStartTransition()
+        {
+            if (!HasStateAuthority)
+            {
+                Debug.LogWarning("[CharacterSelectionState] TriggerGameStartTransition called on non-authority client - ignoring");
+                return;
+            }
+
+            if (CanStartGame())
+            {
+                Debug.Log("[CharacterSelectionState] Triggering game start transition to all clients");
+                RPC_NotifyGameStartTransition();
+            }
+            else
+            {
+                Debug.LogWarning("[CharacterSelectionState] Cannot start game - not all players ready");
+            }
+        }
+
+        // RPC to notify all clients about game start transition
+        [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
+        public void RPC_NotifyGameStartTransition()
+        {
+            Debug.Log($"[CharacterSelectionState] RPC_NotifyGameStartTransition received on {(HasStateAuthority ? "Server" : "Client")}");
+
+            // Notify the UI system to transition
+            if (GameStateManager.Instance != null)
+            {
+                GameStateManager.Instance.TransitionToMapSelection();
+            }
+            else
+            {
+                Debug.LogError("[CharacterSelectionState] GameStateManager.Instance not found!");
+            }
+        }
+
+        // Method to trigger final game transition (Map Selection -> Actual Game)
+        public void TriggerFinalGameTransition()
+        {
+            if (!HasStateAuthority)
+            {
+                Debug.LogWarning("[CharacterSelectionState] TriggerFinalGameTransition called on non-authority client - ignoring");
+                return;
+            }
+
+            Debug.Log("[CharacterSelectionState] Triggering final game transition to all clients");
+            RPC_NotifyFinalGameTransition();
+        }
+
+        // RPC to notify all clients about final game transition
+        [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
+        public void RPC_NotifyFinalGameTransition()
+        {
+            Debug.Log($"[CharacterSelectionState] RPC_NotifyFinalGameTransition received on {(HasStateAuthority ? "Server" : "Client")}");
+
+            // Notify the UI system to transition to final game state
+            if (GameStateManager.Instance != null)
+            {
+                GameStateManager.Instance.TransitionToGame();
+            }
+            else
+            {
+                Debug.LogError("[CharacterSelectionState] GameStateManager.Instance not found!");
+            }
         }
 
         // Method to get detailed selection info for debugging
         public void LogSelectionState()
         {
-            Debug.Log($"[CharacterSelectionState] === Selection State on {(HasStateAuthority ? "Host" : "Client")} ===");
+            Debug.Log($"[CharacterSelectionState] === Selection State on {(HasStateAuthority ? "Server" : "Client")} ===");
             Debug.Log($"[CharacterSelectionState] PlayerSelections.Count: {PlayerSelections.Count}");
 
             foreach (var kvp in PlayerSelections)
