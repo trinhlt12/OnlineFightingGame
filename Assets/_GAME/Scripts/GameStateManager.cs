@@ -51,7 +51,25 @@ public class GameStateManager : Singleton<GameStateManager>
         if (enableDebugLogs)
             Debug.Log("[GameStateManager] Step 1: Hiding Character Selection Canvas");
 
-        UIManager.Instance.Hide<CharacterSelectionCanvas>();
+        // Try to hide via UIManager first
+        if (UIManager.Instance.IsLoaded<CharacterSelectionCanvas>())
+        {
+            UIManager.Instance.Hide<CharacterSelectionCanvas>();
+        }
+        else
+        {
+            // Fallback: Find and hide directly if not managed by UIManager
+            var characterCanvas = FindObjectOfType<CharacterSelectionCanvas>();
+            if (characterCanvas != null)
+            {
+                characterCanvas.Hide();
+                Debug.Log("[GameStateManager] Found and hid CharacterSelectionCanvas directly");
+            }
+            else
+            {
+                Debug.LogWarning("[GameStateManager] Could not find CharacterSelectionCanvas in scene!");
+            }
+        }
 
         // Optional: Add a small delay for smooth transition
         yield return new WaitForSeconds(0.1f);
@@ -119,8 +137,30 @@ public class GameStateManager : Singleton<GameStateManager>
         _currentState = GameState.InGame;
         OnGameStarted?.Invoke();
 
-        // TODO: Load game scene or initialize game state
+        // Spawn characters based on selection data
+        SpawnSelectedCharacters();
+
+        // TODO: Load game scene or initialize other game state
         // SceneManager.LoadScene("GameScene");
+    }
+
+    /// <summary>
+    /// Spawns characters based on character selection data
+    /// </summary>
+    private void SpawnSelectedCharacters()
+    {
+        var characterSpawnManager = FindObjectOfType<CharacterSpawnManager>();
+        if (characterSpawnManager != null)
+        {
+            if (enableDebugLogs)
+                Debug.Log("[GameStateManager] Found CharacterSpawnManager, triggering character spawning");
+
+            characterSpawnManager.SpawnSelectedCharacters();
+        }
+        else
+        {
+            Debug.LogError("[GameStateManager] CharacterSpawnManager not found in scene! Cannot spawn characters.");
+        }
     }
 
     /// <summary>
