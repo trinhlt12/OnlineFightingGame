@@ -17,15 +17,13 @@ namespace _GAME.Scripts.FSM.ConcreteState
         public override void EnterState()
         {
             base.EnterState();
-            Debug.LogWarning("Current State: " + this.entity._stateMachine.CurrentState + "Previous state: " + entity._stateMachine.PreviousState);
 
-            // Perform the jump action immediately upon entering the state.
-            // This is now safe because the transition to JumpState itself consumes the input.
+            // First jump when entering state
             if (HasStateAuthority)
             {
-                entity.PerformJump();
+                entity.PerformJump(); // ← This will consume the input
                 var player = entity.GetComponent<PlayerController>();
-                player._rigidbody.gravityScale = 1f; // Or your desired jump gravity
+                player._rigidbody.gravityScale = 1f;
             }
         }
 
@@ -33,14 +31,16 @@ namespace _GAME.Scripts.FSM.ConcreteState
         {
             if (!HasStateAuthority) return;
 
-            // Air movement is the only continuous logic needed in JumpState.
+            // Air movement
             entity.HandleAirMovement(entity.CurrentMoveInput);
 
+            // Double jump check - input will be consumed if used
             if (entity.WasJumpPressedThisFrame && entity.CanJump)
             {
-                entity.PerformJump();
+                entity.PerformJump(); // ← This will consume the input
             }
         }
+
 
         public override void ExitState()
         {

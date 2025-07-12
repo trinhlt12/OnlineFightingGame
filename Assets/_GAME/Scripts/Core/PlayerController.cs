@@ -43,8 +43,16 @@ namespace _GAME.Scripts.Core
         public  bool             JumpQueued { get; private set; }
         private NetworkInputData _lastFrameInput;
         private NetworkInputData _currentFrameInput;
+        private bool             _jumpInputConsumedThisFrame = false;
 
-        public bool WasJumpPressedThisFrame { get { return _currentFrameInput.WasPressedThisFrame(NetworkButtons.Jump); } }
+        public bool WasJumpPressedThisFrame
+        {
+            get
+            {
+                return _currentFrameInput.WasPressedThisFrame(NetworkButtons.Jump)
+                    && !_jumpInputConsumedThisFrame;
+            }
+        }
 
         // Properties for states to access
         public  Rigidbody2D Rigidbody    => _rigidbody;
@@ -127,15 +135,16 @@ namespace _GAME.Scripts.Core
 
         public override void FixedUpdateNetwork()
         {
+            // Reset consumption flag at start of each tick
+            _jumpInputConsumedThisFrame = false;
+
             if (GetInput(out NetworkInputData input))
             {
                 _lastFrameInput    = _currentFrameInput;
                 _currentFrameInput = input;
-
-                CurrentMoveInput = input.horizontal;
+                CurrentMoveInput   = input.horizontal;
             }
 
-            // Server logic
             if (HasStateAuthority)
             {
                 CheckGround();
@@ -149,7 +158,9 @@ namespace _GAME.Scripts.Core
 
         public void ConsumeJumpInput()
         {
-            JumpQueued = false;
+            _jumpInputConsumedThisFrame = true;
+            if (enableAnimationLogs)
+                Debug.Log("[PlayerController] Jump input consumed");
         }
 
         public void Move(float horizontalInput)
@@ -185,6 +196,9 @@ namespace _GAME.Scripts.Core
 
             _rigidbody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             JumpsUsed++;
+
+            // CONSUME the jump input immediately after use
+            ConsumeJumpInput();
 
             if (enableAnimationLogs)
                 Debug.Log($"[PlayerController] Performed jump {JumpsUsed}/{MAX_JUMPS}");
