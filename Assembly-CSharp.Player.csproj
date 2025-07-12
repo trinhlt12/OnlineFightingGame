@@ -163,6 +163,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Events.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Methods.cs" />
     <Compile Include="Assets\_GAME\Scripts\FSM\NetworkedBaseState.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Combat\ComboDefinitionSO.cs" />
     <Compile Include="Assets\_GAME\Scripts\CanvasRenderBridge.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Accumulators\Vector3Accumulator.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkFloat.cs" />
