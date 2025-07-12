@@ -14,38 +14,34 @@ namespace _GAME.Scripts.Core
     [RequireComponent(typeof(NetworkTransform))]
     public class PlayerController : NetworkBehaviour
     {
-        [Header("Movement")]
-        [SerializeField] private float moveSpeed = 5f;
+        [Header("Movement")] [SerializeField] private float moveSpeed = 5f;
 
-        [Header("Ground Check")]
-        [SerializeField] private Transform groundCheckPoint;
-        [SerializeField] private float groundCheckRadius = 0.2f;
-        [SerializeField] private LayerMask groundLayer;
+        [Header("Ground Check")] [SerializeField] private Transform groundCheckPoint;
+        [SerializeField]                          private float     groundCheckRadius = 0.2f;
+        [SerializeField]                          private LayerMask groundLayer;
 
-        [Header("References")]
-        [SerializeField] private Animator animator;
+        [Header("References")] [SerializeField] private Animator animator;
 
-        [Header("Animation Settings")]
-        [SerializeField] private bool enableAnimationLogs = false;
+        [Header("Animation Settings")] [SerializeField] private bool enableAnimationLogs = false;
 
         // Components
-        private Rigidbody2D _rigidbody;
+        private Rigidbody2D           _rigidbody;
         private NetworkedStateMachine _stateMachine;
 
         // Network properties
-        [Networked] public bool IsGrounded { get; private set; }
-        [Networked] public bool IsFacingRight { get; private set; } = true;
+        [Networked] public bool  IsGrounded       { get; private set; }
+        [Networked] public bool  IsFacingRight    { get; private set; } = true;
         [Networked] public float CurrentMoveInput { get; private set; }
 
         // Properties for states to access
-        public Rigidbody2D Rigidbody => _rigidbody;
-        public Animator Animator => animator;
-        public bool HasMoveInput => Mathf.Abs(CurrentMoveInput) > 0.01f;
+        public Rigidbody2D Rigidbody    => _rigidbody;
+        public Animator    Animator     => animator;
+        public bool        HasMoveInput => Mathf.Abs(CurrentMoveInput) > 0.01f;
 
         public override void Spawned()
         {
             // Get components
-            _rigidbody = GetComponent<Rigidbody2D>();
+            _rigidbody    = GetComponent<Rigidbody2D>();
             _stateMachine = GetComponent<NetworkedStateMachine>() ?? gameObject.AddComponent<NetworkedStateMachine>();
 
             // Ensure animator is assigned
@@ -70,14 +66,15 @@ namespace _GAME.Scripts.Core
                 {
                     new GameObject("InputManager").AddComponent<InputManager>();
                 }
+                UpdateCharacterDirection();
             }
         }
 
         private void InitializeStateMachine()
         {
             // Create states with automatic animation names
-            var idleState = new IdleState(this);    // Will auto-play "Idle" animation
-            var moveState = new MoveState(this);    // Will auto-play "Move" animation
+            var idleState = new IdleState(this); // Will auto-play "Idle" animation
+            var moveState = new MoveState(this); // Will auto-play "Move" animation
 
             // Register states
             _stateMachine.RegisterState(idleState);
@@ -120,13 +117,15 @@ namespace _GAME.Scripts.Core
 
             // Apply movement
             var velocity = _rigidbody.velocity;
-            velocity.x = horizontalInput * moveSpeed;
+            velocity.x          = horizontalInput * moveSpeed;
             _rigidbody.velocity = velocity;
 
             // Update facing direction
             if (horizontalInput != 0)
             {
                 IsFacingRight = horizontalInput > 0;
+
+                UpdateCharacterDirection();
             }
         }
 
@@ -138,7 +137,7 @@ namespace _GAME.Scripts.Core
             if (!HasStateAuthority) return;
 
             var velocity = _rigidbody.velocity;
-            velocity.x = 0f;
+            velocity.x          = 0f;
             _rigidbody.velocity = velocity;
         }
 
@@ -164,8 +163,7 @@ namespace _GAME.Scripts.Core
         {
             if (string.IsNullOrEmpty(animationName))
             {
-                if (enableAnimationLogs)
-                    Debug.LogWarning($"[PlayerController] Attempted to play null/empty animation on {gameObject.name}");
+                if (enableAnimationLogs) Debug.LogWarning($"[PlayerController] Attempted to play null/empty animation on {gameObject.name}");
                 return;
             }
 
@@ -174,13 +172,11 @@ namespace _GAME.Scripts.Core
                 // Use Play for immediate state changes (no blending)
                 animator.Play(animationName);
 
-                if (enableAnimationLogs)
-                    Debug.Log($"[PlayerController] Playing animation: {animationName} on {gameObject.name}");
+                if (enableAnimationLogs) Debug.Log($"[PlayerController] Playing animation: {animationName} on {gameObject.name}");
             }
             else
             {
-                if (enableAnimationLogs)
-                    Debug.LogWarning($"[PlayerController] No Animator component found, cannot play animation: {animationName}");
+                if (enableAnimationLogs) Debug.LogWarning($"[PlayerController] No Animator component found, cannot play animation: {animationName}");
             }
         }
 
@@ -191,8 +187,7 @@ namespace _GAME.Scripts.Core
         {
             if (string.IsNullOrEmpty(animationName))
             {
-                if (enableAnimationLogs)
-                    Debug.LogWarning($"[PlayerController] Attempted to play null/empty animation with crossfade on {gameObject.name}");
+                if (enableAnimationLogs) Debug.LogWarning($"[PlayerController] Attempted to play null/empty animation with crossfade on {gameObject.name}");
                 return;
             }
 
@@ -201,14 +196,48 @@ namespace _GAME.Scripts.Core
                 var animationHash = Animator.StringToHash(animationName);
                 animator.CrossFade(animationHash, crossfadeDuration);
 
-                if (enableAnimationLogs)
-                    Debug.Log($"[PlayerController] Playing animation with crossfade: {animationName} (duration: {crossfadeDuration}) on {gameObject.name}");
+                if (enableAnimationLogs) Debug.Log($"[PlayerController] Playing animation with crossfade: {animationName} (duration: {crossfadeDuration}) on {gameObject.name}");
             }
             else
             {
-                if (enableAnimationLogs)
-                    Debug.LogWarning($"[PlayerController] No Animator component found, cannot play animation with crossfade: {animationName}");
+                if (enableAnimationLogs) Debug.LogWarning($"[PlayerController] No Animator component found, cannot play animation with crossfade: {animationName}");
             }
+        }
+
+        /// <summary>
+        /// Updates character visual direction based on facing direction
+        /// Call this method to flip character sprite when direction changes
+        /// </summary>
+        private void UpdateCharacterDirection()
+        {
+            if (!HasStateAuthority) return;
+
+            // Get current scale
+            Vector3 localScale = transform.localScale;
+
+            // Flip the character by changing the X scale
+            if (IsFacingRight && localScale.x < 0)
+            {
+                localScale.x         = Mathf.Abs(localScale.x);
+                transform.localScale = localScale;
+
+                if (enableAnimationLogs) Debug.Log($"[PlayerController] Flipped character to face RIGHT");
+            }
+            else if (!IsFacingRight && localScale.x > 0)
+            {
+                localScale.x         = -Mathf.Abs(localScale.x);
+                transform.localScale = localScale;
+
+                if (enableAnimationLogs) Debug.Log($"[PlayerController] Flipped character to face LEFT");
+            }
+        }
+
+        /// <summary>
+        /// Force update character direction (useful for initialization)
+        /// </summary>
+        public void ForceUpdateDirection()
+        {
+            UpdateCharacterDirection();
         }
 
         /// <summary>
@@ -216,8 +245,7 @@ namespace _GAME.Scripts.Core
         /// </summary>
         public bool IsPlayingAnimation(string animationName, int layerIndex = 0)
         {
-            if (animator == null || string.IsNullOrEmpty(animationName))
-                return false;
+            if (animator == null || string.IsNullOrEmpty(animationName)) return false;
 
             var stateInfo = animator.GetCurrentAnimatorStateInfo(layerIndex);
             return stateInfo.IsName(animationName);
@@ -228,8 +256,7 @@ namespace _GAME.Scripts.Core
         /// </summary>
         public float GetCurrentAnimationTime(int layerIndex = 0)
         {
-            if (animator == null)
-                return 0f;
+            if (animator == null) return 0f;
 
             return animator.GetCurrentAnimatorStateInfo(layerIndex).normalizedTime;
         }
