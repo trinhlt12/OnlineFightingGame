@@ -24,12 +24,6 @@ namespace _GAME.Scripts.FSM.ConcreteState
             // Example: Enable movement particles, sound effects, etc.
         }
 
-        public override void StateUpdate()
-        {
-            // Visual updates (animation speed based on movement)
-            UpdateMovementAnimation();
-        }
-
         public override void StateFixedUpdate()
         {
             if (!HasStateAuthority) return;
@@ -46,28 +40,13 @@ namespace _GAME.Scripts.FSM.ConcreteState
             ResetMovementAnimation();
         }
 
-        /// <summary>
-        /// Updates movement animation based on input speed
-        /// </summary>
-        private void UpdateMovementAnimation()
-        {
-            if (entity.Animator != null)
-            {
-                // Set animation speed based on movement input
-                float moveSpeed = Mathf.Abs(entity.CurrentMoveInput);
-                entity.Animator.SetFloat("MoveSpeed", moveSpeed);
-            }
-        }
 
         /// <summary>
         /// Resets movement animation parameters
         /// </summary>
         private void ResetMovementAnimation()
         {
-            if (entity.Animator != null)
-            {
-                entity.Animator.SetFloat("MoveSpeed", 0f);
-            }
+
         }
 
         /// <summary>
@@ -82,7 +61,6 @@ namespace _GAME.Scripts.FSM.ConcreteState
             // Example: Different animations based on movement direction, speed, etc.
 
             // Initialize movement animation parameters
-            UpdateMovementAnimation();
         }
     }
 }

@@ -6,55 +6,85 @@ using System.Collections.Generic;
 using _GAME.Scripts.Core;
 
 /// <summary>
-/// Simple input manager - collects and sends input through network
+/// Fixed input manager - resolves deadzone bug
 /// </summary>
 public class InputManager : MonoBehaviour, INetworkRunnerCallbacks
 {
-    [Header("Settings")] [SerializeField] private float deadZone = 0.1f;
+    [Header("Settings")]
+    [SerializeField] private float deadZone = 0.1f;
+
+    [Header("Debug")]
+    [SerializeField] private bool enableDebugLogs = false;
 
     private NetworkInputData _inputData;
 
+    private void Start()
+    {
+        var runner = FindObjectOfType<NetworkRunner>();
+        if (runner != null)
+        {
+            runner.AddCallbacks(this);
+            Debug.Log("[InputManager] Registered with NetworkRunner");
+        }
+        else
+        {
+            Debug.LogError("[InputManager] NetworkRunner not found!");
+        }
+    }
     private void Update()
     {
-        // Collect horizontal input
-        _inputData.horizontal = Input.GetAxisRaw("Horizontal");
+        // Get raw input first
+        float rawHorizontal = Input.GetAxisRaw("Horizontal");
 
-        // Apply deadzone
-        if (Mathf.Abs(_inputData.horizontal) < deadZone) _inputData.horizontal = 0f;
+        // Apply deadzone ONCE and store result
+        float processedInput;
+        if (Mathf.Abs(rawHorizontal) < deadZone)
+        {
+            processedInput = 0f;
+            if (enableDebugLogs && rawHorizontal != 0)
+                Debug.Log($"[FixedInputManager] Input {rawHorizontal} zeroed by deadzone {deadZone}");
+        }
+        else
+        {
+            processedInput = rawHorizontal;
+            if (enableDebugLogs)
+                Debug.Log($"[FixedInputManager] Input accepted: {processedInput}");
+        }
+
+        // Set the final input data
+        _inputData.horizontal = processedInput;
     }
-
-    #region INetworkRunnerCallbacks
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
+        // Send the processed input
         input.Set(_inputData);
+
+        if (enableDebugLogs && _inputData.horizontal != 0)
+        {
+            Debug.Log($"[FixedInputManager] Sending network input: {_inputData.horizontal}");
+        }
     }
 
-    // Required empty implementations
+    #region INetworkRunnerCallbacks - Required Empty Implementations
+
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
-
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
-
-    public void OnPlayerJoined(NetworkRunner      runner, PlayerRef      player)                     { }
-    public void OnPlayerLeft(NetworkRunner        runner, PlayerRef      player)                     { }
-    public void OnInputMissing(NetworkRunner      runner, PlayerRef      player, NetworkInput input) { }
-    public void OnShutdown(NetworkRunner          runner, ShutdownReason shutdownReason) { }
+    public void OnPlayerJoined(NetworkRunner runner, PlayerRef player) { }
+    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
+    public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
+    public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) { }
     public void OnConnectedToServer(NetworkRunner runner) { }
-
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { }
-
-    public void OnConnectRequest(NetworkRunner               runner, NetworkRunnerCallbackArgs.ConnectRequest request,       byte[]                 token)  { }
-    public void OnConnectFailed(NetworkRunner                runner, NetAddress                               remoteAddress, NetConnectFailedReason reason) { }
-    public void OnUserSimulationMessage(NetworkRunner        runner, SimulationMessagePtr                     message)            { }
-    public void OnSessionListUpdated(NetworkRunner           runner, List<SessionInfo>                        sessionList)        { }
-    public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object>               data)               { }
-    public void OnHostMigration(NetworkRunner                runner, HostMigrationToken                       hostMigrationToken) { }
-
+    public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
+    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { }
+    public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }
+    public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) { }
+    public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { }
+    public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { }
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
-
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
-
-    public void OnSceneLoadDone(NetworkRunner  runner) { }
+    public void OnSceneLoadDone(NetworkRunner runner) { }
     public void OnSceneLoadStart(NetworkRunner runner) { }
 
     #endregion
