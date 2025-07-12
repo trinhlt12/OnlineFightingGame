@@ -17,6 +17,7 @@ namespace _GAME.Scripts.FSM.ConcreteState
         public override void EnterState()
         {
             base.EnterState();
+            Debug.LogWarning("Current State: " + this.entity._stateMachine.CurrentState + "Previous state: " + entity._stateMachine.PreviousState);
 
             // Perform the jump action immediately upon entering the state.
             // This is now safe because the transition to JumpState itself consumes the input.
@@ -35,7 +36,10 @@ namespace _GAME.Scripts.FSM.ConcreteState
             // Air movement is the only continuous logic needed in JumpState.
             entity.HandleAirMovement(entity.CurrentMoveInput);
 
-            // Double jump is now handled by the FSM transitioning from JumpState back to JumpState.
+            if (entity.WasJumpPressedThisFrame && entity.CanJump)
+            {
+                entity.PerformJump();
+            }
         }
 
         public override void ExitState()

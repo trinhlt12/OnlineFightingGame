@@ -28,7 +28,7 @@ namespace _GAME.Scripts.Core
 
         // Components
         public Rigidbody2D           _rigidbody;
-        private NetworkedStateMachine _stateMachine;
+        public NetworkedStateMachine _stateMachine;
 
         // Network properties
         [Networked] public bool IsGrounded    { get; private set; }
@@ -37,10 +37,14 @@ namespace _GAME.Scripts.Core
         [Networked] public float CurrentMoveInput { get; private set; }
 
         // Jump tracking for double jump system
-        [Networked] public int  JumpsUsed        { get; private set; }
+        [Networked] public int JumpsUsed { get; private set; }
 
         // This is now a Tick-local property, not networked. It signals a jump request for the current tick.
-        public bool JumpQueued { get; private set; }
+        public  bool             JumpQueued { get; private set; }
+        private NetworkInputData _lastFrameInput;
+        private NetworkInputData _currentFrameInput;
+
+        public bool WasJumpPressedThisFrame { get { return _currentFrameInput.WasPressedThisFrame(NetworkButtons.Jump); } }
 
         // Properties for states to access
         public  Rigidbody2D Rigidbody    => _rigidbody;
@@ -97,11 +101,11 @@ namespace _GAME.Scripts.Core
             _stateMachine.AddTransition(idleState, moveState, new FuncPredicate(() => HasMoveInput));
             _stateMachine.AddTransition(moveState, idleState, new FuncPredicate(() => !HasMoveInput));
 
-            // Transitions to JumpState (from any other state)
-            _stateMachine.AddTransition(idleState, jumpState, new FuncPredicate(() => HasJumpInput && CanJump));
-            _stateMachine.AddTransition(moveState, jumpState, new FuncPredicate(() => HasJumpInput && CanJump));
-            // This allows for the double jump
-            _stateMachine.AddTransition(jumpState, jumpState, new FuncPredicate(() => HasJumpInput && CanJump));
+            // Transitions to JumpState - use direct input check
+            _stateMachine.AddTransition(idleState, jumpState,
+                new FuncPredicate(() => WasJumpPressedThisFrame && CanJump));
+            _stateMachine.AddTransition(moveState, jumpState,
+                new FuncPredicate(() => WasJumpPressedThisFrame && CanJump));
 
             // Transitions from JumpState (when landing)
             _stateMachine.AddTransition(jumpState, idleState, new FuncPredicate(() => IsGrounded && !HasMoveInput));
@@ -123,22 +127,15 @@ namespace _GAME.Scripts.Core
 
         public override void FixedUpdateNetwork()
         {
-            // Reset jump queue at the start of every tick on the Input Authority
-            if (HasInputAuthority)
-            {
-                JumpQueued = false;
-            }
-
             if (GetInput(out NetworkInputData input))
             {
+                _lastFrameInput    = _currentFrameInput;
+                _currentFrameInput = input;
+
                 CurrentMoveInput = input.horizontal;
-                if (input.WasPressedThisFrame(NetworkButtons.Jump))
-                {
-                    JumpQueued = true;
-                }
             }
 
-            // Server-authoritative logic
+            // Server logic
             if (HasStateAuthority)
             {
                 CheckGround();
@@ -182,18 +179,15 @@ namespace _GAME.Scripts.Core
         {
             if (!HasStateAuthority || !CanJump) return;
 
-            // *** FIX: Reset vertical velocity before applying new jump force for a consistent "boost" feel. ***
             var velocity = _rigidbody.velocity;
-            velocity.y = 0;
+            velocity.y          = 0;
             _rigidbody.velocity = velocity;
 
-            // Apply jump force
             _rigidbody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-
             JumpsUsed++;
-            ConsumeJumpInput();
 
-            if (enableAnimationLogs) Debug.Log($"[PlayerController] Performed jump {JumpsUsed}/{MAX_JUMPS}");
+            if (enableAnimationLogs)
+                Debug.Log($"[PlayerController] Performed jump {JumpsUsed}/{MAX_JUMPS}");
         }
 
         public void HandleAirMovement(float horizontalInput)
@@ -255,6 +249,5 @@ namespace _GAME.Scripts.Core
                 transform.localScale = localScale;
             }
         }
-
     }
 }

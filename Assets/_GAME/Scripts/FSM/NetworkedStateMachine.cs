@@ -30,6 +30,7 @@ public class NetworkedStateMachine : NetworkBehaviour
 
     // Public properties
     public IState CurrentState  => currentState?.State;
+    public IState PreviousState => _lastKnownStateID != -1 && stateIdToState.ContainsKey(_lastKnownStateID) ? stateIdToState[_lastKnownStateID] : null;
     public bool   IsInitialized { get; private set; }
 
     // Events
