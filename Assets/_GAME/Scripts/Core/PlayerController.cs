@@ -22,16 +22,23 @@ namespace _GAME.Scripts.Core
 
         [Header("References")] [SerializeField] private Animator animator;
 
-        [Header("Animation Settings")] [SerializeField] private bool enableAnimationLogs = false;
+        [Header("Animation Settings")] [SerializeField] private bool  enableAnimationLogs = false;
+        [Header("Jump Settings")] [SerializeField]      private float jumpForce           = 10f;
+        [SerializeField]                                private float airMoveSpeed        = 3f; // Reduced speed in air
 
         // Components
-        private Rigidbody2D           _rigidbody;
+        public Rigidbody2D           _rigidbody;
         private NetworkedStateMachine _stateMachine;
 
         // Network properties
-        [Networked] public bool  IsGrounded       { get; private set; }
-        [Networked] public bool  IsFacingRight    { get; private set; } = true;
+        [Networked] public bool IsGrounded    { get; private set; }
+        [Networked] public bool IsFacingRight { get; private set; } = true;
+
         [Networked] public float CurrentMoveInput { get; private set; }
+
+        // Jump tracking for double jump system
+        [Networked] public int  JumpsUsed        { get; private set; }
+        [Networked] public bool JumpInputPressed { get; private set; }
 
         // Properties for states to access
         public  Rigidbody2D Rigidbody    => _rigidbody;
@@ -39,6 +46,11 @@ namespace _GAME.Scripts.Core
         public  bool        HasMoveInput => Mathf.Abs(CurrentMoveInput) > 0.01f;
         private bool        _lastKnownFacingDirection;
         public  bool        CurrentFacingRight => IsFacingRight;
+        public  bool        CanJump            => JumpsUsed < MAX_JUMPS;
+        public  bool        HasJumpInput       => JumpInputPressed;
+
+        //CONSTANTS:
+        private const int MAX_JUMPS = 2;
 
         public override void Spawned()
         {
@@ -79,19 +91,33 @@ namespace _GAME.Scripts.Core
             // Create states with automatic animation names
             var idleState = new IdleState(this); // Will auto-play "Idle" animation
             var moveState = new MoveState(this); // Will auto-play "Move" animation
+            var jumpState = new JumpState(this); // Will auto-play "Jump" animation
+
 
             // Register states
             _stateMachine.RegisterState(idleState);
             _stateMachine.RegisterState(moveState);
+            _stateMachine.RegisterState(jumpState);
+
 
             // Add transitions
             // Idle -> Move when has input
             _stateMachine.AddTransition(idleState, moveState,
                 new FuncPredicate(() => HasMoveInput));
+            _stateMachine.AddTransition(idleState, jumpState,
+                new FuncPredicate(() => HasJumpInput && CanJump));
 
             // Move -> Idle when no input
             _stateMachine.AddTransition(moveState, idleState,
                 new FuncPredicate(() => !HasMoveInput));
+            _stateMachine.AddTransition(moveState, jumpState,
+                new FuncPredicate(() => HasJumpInput && CanJump));
+
+            // From Jump
+            _stateMachine.AddTransition(jumpState, idleState,
+                new FuncPredicate(() => IsGrounded && !HasMoveInput));
+            _stateMachine.AddTransition(jumpState, moveState,
+                new FuncPredicate(() => IsGrounded && HasMoveInput));
 
             // Initialize with idle state
             _stateMachine.InitializeStateMachine(idleState);
@@ -116,10 +142,18 @@ namespace _GAME.Scripts.Core
                 // Update ground check
                 CheckGround();
 
+                // Reset jumps when grounded
+                if (IsGrounded && JumpsUsed > 0)
+                {
+                    JumpsUsed = 0;
+                }
+
                 // Get and store input
                 if (Runner.TryGetInputForPlayer<NetworkInputData>(Object.InputAuthority, out var input))
                 {
                     CurrentMoveInput = input.horizontal;
+                    // Use fully qualified name to avoid conflict
+                    JumpInputPressed = input.buttons.IsPressed(_GAME.Scripts.Core.NetworkButtons.Jump);
                 }
             }
         }
@@ -157,6 +191,57 @@ namespace _GAME.Scripts.Core
             var velocity = _rigidbody.velocity;
             velocity.x          = 0f;
             _rigidbody.velocity = velocity;
+        }
+
+        /// <summary>
+        /// Perform jump - called by JumpState
+        /// </summary>
+        public void PerformJump()
+        {
+            if (!HasStateAuthority || !CanJump) return;
+
+            // Apply jump force
+            var velocity = _rigidbody.velocity;
+            velocity.y          = jumpForce;
+            _rigidbody.velocity = velocity;
+
+            // Increment jump counter
+            JumpsUsed++;
+
+            if (enableAnimationLogs) Debug.Log($"[PlayerController] Performed jump {JumpsUsed}/{MAX_JUMPS}");
+        }
+
+        /// <summary>
+        /// Handle movement while in air - called by JumpState
+        /// </summary>
+        public void HandleAirMovement(float horizontalInput)
+        {
+            if (!HasStateAuthority) return;
+
+            // Apply air movement (reduced speed compared to ground)
+            var velocity = _rigidbody.velocity;
+            velocity.x          = horizontalInput * airMoveSpeed;
+            _rigidbody.velocity = velocity;
+
+            // Update facing direction
+            if (horizontalInput != 0)
+            {
+                IsFacingRight = horizontalInput > 0;
+            }
+        }
+
+        /// <summary>
+        /// Check for additional jump input while in air - called by JumpState
+        /// </summary>
+        public void CheckForAdditionalJump()
+        {
+            if (!HasStateAuthority) return;
+
+            // If jump input is pressed and we can still jump
+            if (JumpInputPressed && CanJump)
+            {
+                PerformJump();
+            }
         }
 
         /// <summary>

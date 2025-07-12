@@ -13,6 +13,7 @@ namespace _GAME.Scripts.Core
 
         // Button states using bitwise operations for efficiency
         public NetworkButtons buttons;
+        public NetworkButtons previousButtons; // Track previous frame for input detection
 
         // Direction the player is aiming/looking (for directional attacks)
         public Vector2 aimDirection;
@@ -26,7 +27,7 @@ namespace _GAME.Scripts.Core
     public enum NetworkButtons : uint
     {
         None    = 0,
-        Jump    = 1 << 0,
+        Jump    = 1 << 0, //Space key
         Attack  = 1 << 1,
         Special = 1 << 2,
         Dodge   = 1 << 3,
