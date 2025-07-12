@@ -4,15 +4,24 @@ using Fusion.Sockets;
 using System;
 using System.Collections.Generic;
 using _GAME.Scripts.Core;
+using _GAME.Scripts.Combat; // For AttackInputType
 
 /// <summary>
-/// Fixed input manager - resolves deadzone bug
+/// Enhanced input manager - handles combat input via NetworkInputData
+/// More efficient than RPC approach for frequent inputs
 /// </summary>
 public class InputManager : MonoBehaviour, INetworkRunnerCallbacks
 {
-    [Header("Settings")] [SerializeField] private float deadZone = 0.1f;
+    [Header("Settings")]
+    [SerializeField] private float deadZone = 0.1f;
 
-    [Header("Debug")] [SerializeField] private bool enableDebugLogs = false;
+    [Header("Combat Input")]
+    [SerializeField] private KeyCode attackKey = KeyCode.J;
+    [SerializeField] private KeyCode specialKey = KeyCode.K;
+    [SerializeField] private KeyCode dodgeKey = KeyCode.L;
+
+    [Header("Debug")]
+    [SerializeField] private bool enableDebugLogs = false;
 
     private NetworkInputData _inputData;
 
@@ -30,6 +39,12 @@ public class InputManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
+    private void Update()
+    {
+        // Note: Main input processing now happens in OnInput()
+        // This Update() can be used for local UI input that doesn't need networking
+    }
+
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
         // Store the previous frame's button states before updating
@@ -40,34 +55,63 @@ public class InputManager : MonoBehaviour, INetworkRunnerCallbacks
 
         // Get raw input first
         float rawHorizontal = Input.GetAxisRaw("Horizontal");
+        float rawVertical = Input.GetAxisRaw("Vertical");
 
         // Apply deadzone ONCE and store result
-        float processedInput;
+        float processedHorizontal;
         if (Mathf.Abs(rawHorizontal) < deadZone)
         {
-            processedInput = 0f;
-            if (enableDebugLogs && rawHorizontal != 0) Debug.Log($"[FixedInputManager] Input {rawHorizontal} zeroed by deadzone {deadZone}");
+            processedHorizontal = 0f;
+            if (enableDebugLogs && rawHorizontal != 0)
+                Debug.Log($"[InputManager] Horizontal input {rawHorizontal} zeroed by deadzone {deadZone}");
         }
         else
         {
-            processedInput = rawHorizontal;
-            if (enableDebugLogs) Debug.Log($"[FixedInputManager] Input accepted: {processedInput}");
+            processedHorizontal = rawHorizontal;
+            if (enableDebugLogs)
+                Debug.Log($"[InputManager] Horizontal input accepted: {processedHorizontal}");
         }
 
         // Set the final input data
-        _inputData.horizontal = processedInput;
+        _inputData.horizontal = processedHorizontal;
 
-        // Handle jump input - use fully qualified name
+        // Handle button inputs
         var buttons = _inputData.buttons;
-        buttons            = buttons.Set(_GAME.Scripts.Core.NetworkButtons.Jump, Input.GetKeyDown(KeyCode.Space));
+
+        // Movement/Jump buttons
+        buttons = buttons.Set(_GAME.Scripts.Core.NetworkButtons.Jump, Input.GetKey(KeyCode.Space));
+
+        // COMBAT SYSTEM - Handle attack inputs
+        bool attackPressed = Input.GetKeyDown(attackKey);
+        buttons = buttons.Set(_GAME.Scripts.Core.NetworkButtons.Attack, attackPressed);
+
+        // Determine attack input type when attack is pressed
+        if (attackPressed)
+        {
+            var attackType = _inputData.GetAttackInputType(processedHorizontal, rawVertical);
+            _inputData.SetAttackInput(attackType, runner.Tick);
+
+            if (enableDebugLogs)
+                Debug.Log($"[InputManager] Attack input: {_inputData.attackInputType} at tick {runner.Tick}");
+        }
+        else
+        {
+            _inputData.attackInputType = _GAME.Scripts.Combat.AttackInputType.None;
+            _inputData.attackInputConsumed = false;
+        }
+
+        // Future combat inputs
+        buttons = buttons.Set(_GAME.Scripts.Core.NetworkButtons.Special, Input.GetKey(specialKey));
+        buttons = buttons.Set(_GAME.Scripts.Core.NetworkButtons.Dodge, Input.GetKey(dodgeKey));
+
         _inputData.buttons = buttons;
 
         // Send the processed input
         input.Set(_inputData);
 
-        if (enableDebugLogs && _inputData.horizontal != 0)
+        if (enableDebugLogs && (_inputData.horizontal != 0 || attackPressed))
         {
-            Debug.Log($"[FixedInputManager] Sending network input: {_inputData.horizontal}");
+            Debug.Log($"[InputManager] Sending network input - Move: {_inputData.horizontal}, Attack: {_inputData.attackInputType}");
         }
     }
 
