@@ -34,9 +34,11 @@ namespace _GAME.Scripts.Core
         [Networked] public float CurrentMoveInput { get; private set; }
 
         // Properties for states to access
-        public Rigidbody2D Rigidbody    => _rigidbody;
-        public Animator    Animator     => animator;
-        public bool        HasMoveInput => Mathf.Abs(CurrentMoveInput) > 0.01f;
+        public  Rigidbody2D Rigidbody    => _rigidbody;
+        public  Animator    Animator     => animator;
+        public  bool        HasMoveInput => Mathf.Abs(CurrentMoveInput) > 0.01f;
+        private bool        _lastKnownFacingDirection;
+        public  bool        CurrentFacingRight => IsFacingRight;
 
         public override void Spawned()
         {
@@ -56,6 +58,9 @@ namespace _GAME.Scripts.Core
 
             // Initialize state machine
             InitializeStateMachine();
+            _lastKnownFacingDirection = IsFacingRight;
+
+            UpdateCharacterDirection();
 
             if (HasInputAuthority)
             {
@@ -66,7 +71,6 @@ namespace _GAME.Scripts.Core
                 {
                     new GameObject("InputManager").AddComponent<InputManager>();
                 }
-                UpdateCharacterDirection();
             }
         }
 
@@ -91,6 +95,18 @@ namespace _GAME.Scripts.Core
 
             // Initialize with idle state
             _stateMachine.InitializeStateMachine(idleState);
+        }
+
+        public override void Render()
+        {
+            // Check for facing direction changes and update visuals for all clients
+            if (IsFacingRight != _lastKnownFacingDirection)
+            {
+                _lastKnownFacingDirection = IsFacingRight;
+                UpdateCharacterDirection();
+
+                if (enableAnimationLogs) Debug.Log($"[PlayerController] {(HasStateAuthority ? "Server" : "Client")} detected direction change to {(IsFacingRight ? "RIGHT" : "LEFT")}");
+            }
         }
 
         public override void FixedUpdateNetwork()
@@ -125,7 +141,9 @@ namespace _GAME.Scripts.Core
             {
                 IsFacingRight = horizontalInput > 0;
 
+                /*
                 UpdateCharacterDirection();
+            */
             }
         }
 
@@ -210,10 +228,8 @@ namespace _GAME.Scripts.Core
         /// </summary>
         private void UpdateCharacterDirection()
         {
-            if (!HasStateAuthority) return;
-
             // Get current scale
-            Vector3 localScale = transform.localScale;
+            var localScale = transform.localScale;
 
             // Flip the character by changing the X scale
             if (IsFacingRight && localScale.x < 0)
