@@ -65,6 +65,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkVector2.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Physics.cs" />
     <Compile Include="Assets\_GAME\Scripts\FSM\Transition.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Combat\AttackDataSO.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\KCCNetworkUtility.cs" />
     <Compile Include="Assets\_GAME\Scripts\FSM\ConcreteState\MoveState.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\NetworkTRSPProcessorProvider.cs" />
