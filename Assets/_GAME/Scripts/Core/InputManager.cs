@@ -59,7 +59,7 @@ public class InputManager : MonoBehaviour, INetworkRunnerCallbacks
 
         // Handle jump input - use fully qualified name
         var buttons = _inputData.buttons;
-        buttons            = buttons.Set(_GAME.Scripts.Core.NetworkButtons.Jump, Input.GetKey(KeyCode.Space));
+        buttons            = buttons.Set(_GAME.Scripts.Core.NetworkButtons.Jump, Input.GetKeyDown(KeyCode.Space));
         _inputData.buttons = buttons;
 
         // Send the processed input
