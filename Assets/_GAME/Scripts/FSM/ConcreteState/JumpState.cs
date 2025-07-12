@@ -17,51 +17,38 @@ namespace _GAME.Scripts.FSM.ConcreteState
         public override void EnterState()
         {
             base.EnterState();
-            var player = entity.GetComponent<PlayerController>();
-            player._rigidbody.gravityScale = 1f;
 
-            // Perform the jump when entering state
+            // Perform the jump action immediately upon entering the state.
+            // This is now safe because the transition to JumpState itself consumes the input.
             if (HasStateAuthority)
             {
                 entity.PerformJump();
+                var player = entity.GetComponent<PlayerController>();
+                player._rigidbody.gravityScale = 1f; // Or your desired jump gravity
             }
-        }
-
-        public override void StateUpdate()
-        {
-            // Visual updates for jump state
-            // Animation handling is done by base class
         }
 
         public override void StateFixedUpdate()
         {
             if (!HasStateAuthority) return;
 
-            // Allow air movement while jumping
+            // Air movement is the only continuous logic needed in JumpState.
             entity.HandleAirMovement(entity.CurrentMoveInput);
 
-            // Check for additional jump input (double jump)
-            entity.CheckForAdditionalJump();
+            // Double jump is now handled by the FSM transitioning from JumpState back to JumpState.
         }
 
         public override void ExitState()
         {
             base.ExitState();
-            // Clean up when leaving jump state
-            var player = entity.GetComponent<PlayerController>();
-            player._rigidbody.gravityScale = 3f;
-        }
 
-        /// <summary>
-        /// Override for custom jump animation logic if needed
-        /// </summary>
-        protected override void PlayStateAnimation()
-        {
-            // Default behavior: play "Jump" animation
-            base.PlayStateAnimation();
-
-            // Optional: Add jump-specific animation logic
-            // Example: Different animations for first jump vs double jump
+            // Only the authority should modify physics properties.
+            if (HasStateAuthority)
+            {
+                // Reset gravity scale when leaving the jump state (e.g., upon landing).
+                var player = entity.GetComponent<PlayerController>();
+                player._rigidbody.gravityScale = 3f; // Your default gravity scale
+            }
         }
     }
 }

@@ -30,8 +30,14 @@ public class InputManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    private void Update()
+    public void OnInput(NetworkRunner runner, NetworkInput input)
     {
+        // Store the previous frame's button states before updating
+        _inputData.previousButtons = _inputData.buttons;
+
+        // Reset the current frame's buttons
+        _inputData.buttons = default;
+
         // Get raw input first
         float rawHorizontal = Input.GetAxisRaw("Horizontal");
 
@@ -40,14 +46,12 @@ public class InputManager : MonoBehaviour, INetworkRunnerCallbacks
         if (Mathf.Abs(rawHorizontal) < deadZone)
         {
             processedInput = 0f;
-            if (enableDebugLogs && rawHorizontal != 0)
-                Debug.Log($"[FixedInputManager] Input {rawHorizontal} zeroed by deadzone {deadZone}");
+            if (enableDebugLogs && rawHorizontal != 0) Debug.Log($"[FixedInputManager] Input {rawHorizontal} zeroed by deadzone {deadZone}");
         }
         else
         {
             processedInput = rawHorizontal;
-            if (enableDebugLogs)
-                Debug.Log($"[FixedInputManager] Input accepted: {processedInput}");
+            if (enableDebugLogs) Debug.Log($"[FixedInputManager] Input accepted: {processedInput}");
         }
 
         // Set the final input data
@@ -57,10 +61,7 @@ public class InputManager : MonoBehaviour, INetworkRunnerCallbacks
         var buttons = _inputData.buttons;
         buttons            = buttons.Set(_GAME.Scripts.Core.NetworkButtons.Jump, Input.GetKey(KeyCode.Space));
         _inputData.buttons = buttons;
-    }
 
-    public void OnInput(NetworkRunner runner, NetworkInput input)
-    {
         // Send the processed input
         input.Set(_inputData);
 

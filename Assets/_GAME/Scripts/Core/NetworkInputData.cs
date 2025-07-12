@@ -45,6 +45,14 @@ namespace _GAME.Scripts.Core
             return (buttons & button) == button;
         }
 
+        /// <summary>
+        /// Checks if a button was pressed down in the current frame.
+        /// </summary>
+        public static bool WasPressedThisFrame(this NetworkInputData current, NetworkButtons button)
+        {
+            return current.buttons.IsPressed(button) && !current.previousButtons.IsPressed(button);
+        }
+
         public static bool IsSet(this NetworkButtons buttons, NetworkButtons button)
         {
             return (buttons & button) == button;
