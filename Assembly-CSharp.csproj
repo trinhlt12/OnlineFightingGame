@@ -60,6 +60,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Stages\AfterMoveStep.cs" />
     <Compile Include="Assets\_GAME\Scripts\FSM\FuncPredicate.cs" />
     <Compile Include="Assets\_GAME\Scripts\MenuImplementation\MenuConnection.cs" />
+    <Compile Include="Assets\_GAME\Scripts\FSM\ConcreteState\AttackState.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Stages\Core\KCCStageInfo.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkProperties.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkVector2.cs" />
@@ -162,8 +163,8 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\PlayerRecorder.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Events.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Methods.cs" />
-    <Compile Include="Assets\_GAME\Scripts\FSM\NetworkedBaseState.cs" />
     <Compile Include="Assets\_GAME\Scripts\Combat\ComboDefinitionSO.cs" />
+    <Compile Include="Assets\_GAME\Scripts\FSM\NetworkedBaseState.cs" />
     <Compile Include="Assets\_GAME\Scripts\Combat\ComboController.cs" />
     <Compile Include="Assets\_GAME\Scripts\CanvasRenderBridge.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Accumulators\Vector3Accumulator.cs" />
@@ -179,6 +180,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCCInterestProxy.cs" />
     <Compile Include="Assets\_GAME\Scripts\FSM\ConcreteState\JumpState.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\Collections\KCCFastStack.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Core\CombatSystemTester.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Sampling.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Network.cs" />
     <None Include="Library\PackageCache\com.unity.modules.subsystems@1.0.0\package.json" />

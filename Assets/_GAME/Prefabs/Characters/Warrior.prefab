@@ -153,6 +153,7 @@ GameObject:
   - component: {fileID: 910935081040998471}
   - component: {fileID: 5350508947873633372}
   - component: {fileID: 7085809471747427103}
+  - component: {fileID: 3384668816739674924}
   m_Layer: 0
   m_Name: Warrior
   m_TagString: Untagged
@@ -260,6 +261,7 @@ MonoBehaviour:
   - {fileID: 910935081040998471}
   - {fileID: 5350508947873633372}
   - {fileID: 7085809471747427103}
+  - {fileID: 3384668816739674924}
 --- !u!114 &6730041619278744568
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -304,6 +306,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32aeacd5bacf4dca807f570c4a06e3a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enableCombatLogs: 0
   moveSpeed: 5
   groundCheckPoint: {fileID: 7803921067414184943}
   groundCheckRadius: 0.2
@@ -311,10 +314,16 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   animator: {fileID: 2765109887868056413}
-  enableAnimationLogs: 0
+  enableAnimationLogs: 1
+  jumpForce: 10
+  airMoveSpeed: 3
+  _rigidbody: {fileID: 3980058348389242511}
+  _stateMachine: {fileID: 7085809471747427103}
   _IsGrounded: 0
   _IsFacingRight: 1
   _CurrentMoveInput: 0
+  _AttackInputConsumed: 0
+  _JumpsUsed: 0
 --- !u!114 &7085809471747427103
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -329,3 +338,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enableDebugLogs: 1
   _CurrentStateID: 0
+--- !u!114 &3384668816739674924
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6351667327372901688}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c77abf2b5f84ac3a78d894825264760, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  comboDefinition: {fileID: 11400000, guid: 63d29c1687d5eca45a3cb1d8bff72efe, type: 2}
+  maxEnergy: 100
+  startingEnergy: 0
+  enableDebugLogs: 1
+  showComboDebugInfo: 1
+  _CurrentComboIndex: 0
+  _CurrentAttackPhase: 0
+  _CurrentEnergy: 0
+  _AttackInputConsumed: 0
+  _AttackStartTick: 0

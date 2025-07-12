@@ -37,6 +37,11 @@ public class InputManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             Debug.LogError("[InputManager] NetworkRunner not found!");
         }
+
+        if (this.GetComponent<CombatSystemTester>() == null)
+        {
+            this.gameObject.AddComponent<CombatSystemTester>();
+        }
     }
 
     private void Update()

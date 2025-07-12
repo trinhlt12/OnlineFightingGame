@@ -121,7 +121,112 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: Attack_KG_4_0
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 0
+        width: 62
+        height: 57
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 279e67bbba9fad04a879257b5ba19768
+      internalID: -593670770
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Attack_KG_4_1
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 0
+        width: 73
+        height: 56
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 44abafa0e6d535c43a0c316e22bb31b6
+      internalID: -699692897
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Attack_KG_4_2
+      rect:
+        serializedVersion: 2
+        x: 211
+        y: 0
+        width: 85
+        height: 56
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8df0b8da2c3eb3a4badb7d434c26eb1a
+      internalID: -234229055
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Attack_KG_4_3
+      rect:
+        serializedVersion: 2
+        x: 333
+        y: 0
+        width: 66
+        height: 59
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bc62f8553d9ab8f4bbb2d871bb89242d
+      internalID: -1559667504
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Attack_KG_4_4
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 0
+        width: 67
+        height: 61
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8be51bcebcb814049bdb126efad1cc23
+      internalID: 1124207449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -132,7 +237,12 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Attack_KG_4_0: -593670770
+      Attack_KG_4_1: -699692897
+      Attack_KG_4_2: -234229055
+      Attack_KG_4_3: -1559667504
+      Attack_KG_4_4: 1124207449
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

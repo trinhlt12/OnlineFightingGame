@@ -4,16 +4,19 @@ namespace _GAME.Scripts.Core
     using Fusion;
     using _GAME.Scripts.FSM;
     using _GAME.Scripts.FSM.ConcreteState;
+    using _GAME.Scripts.Combat;
 
     /// <summary>
     /// Central player controller - manages all player logic
     /// States will call methods from this controller
-    /// Updated to work with automatic state animation system
+    /// Updated to work with automatic state animation system and combat system
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(NetworkTransform))]
     public class PlayerController : NetworkBehaviour
     {
+        [Header("Combat")] [SerializeField] private bool enableCombatLogs = false;
+
         [Header("Movement")] [SerializeField] private float moveSpeed = 5f;
 
         [Header("Ground Check")] [SerializeField] private Transform groundCheckPoint;
@@ -27,14 +30,17 @@ namespace _GAME.Scripts.Core
         [SerializeField]                                private float airMoveSpeed        = 3f; // Reduced speed in air
 
         // Components
-        public Rigidbody2D           _rigidbody;
-        public NetworkedStateMachine _stateMachine;
+        public  Rigidbody2D           _rigidbody;
+        public  NetworkedStateMachine _stateMachine;
+        private ComboController       _comboController; // Combat system integration
 
         // Network properties
-        [Networked] public bool IsGrounded    { get; private set; }
-        [Networked] public bool IsFacingRight { get; private set; } = true;
-
+        [Networked] public bool  IsGrounded       { get; private set; }
+        [Networked] public bool  IsFacingRight    { get; private set; } = true;
         [Networked] public float CurrentMoveInput { get; private set; }
+
+        // Combat System - Network properties for attack input
+        [Networked] public bool AttackInputConsumed { get; private set; }
 
         // Jump tracking for double jump system
         [Networked] public int JumpsUsed { get; private set; }
@@ -44,6 +50,15 @@ namespace _GAME.Scripts.Core
         private NetworkInputData _lastFrameInput;
         private NetworkInputData _currentFrameInput;
         private bool             _jumpInputConsumedThisFrame = false;
+
+        public bool WasAttackPressedThisFrame
+        {
+            get
+            {
+                return _currentFrameInput.WasAttackPressedThisFrame()
+                    && !AttackInputConsumed;
+            }
+        }
 
         public bool WasJumpPressedThisFrame
         {
@@ -63,13 +78,19 @@ namespace _GAME.Scripts.Core
         public  bool        CanJump            => JumpsUsed < MAX_JUMPS;
         public  bool        HasJumpInput       => JumpQueued;
 
+        // COMBAT SYSTEM - Properties for accessing combat state
+        public bool            IsInCombo       => _comboController != null && _comboController.IsInCombo;
+        public bool            IsAttacking     => _comboController != null && _comboController.AttackPhase != AttackPhase.None;
+        public ComboController ComboController => _comboController;
+
         //CONSTANTS:
         private const int MAX_JUMPS = 2;
 
         public override void Spawned()
         {
-            _rigidbody    = GetComponent<Rigidbody2D>();
-            _stateMachine = GetComponent<NetworkedStateMachine>() ?? gameObject.AddComponent<NetworkedStateMachine>();
+            _rigidbody       = GetComponent<Rigidbody2D>();
+            _stateMachine    = GetComponent<NetworkedStateMachine>() ?? gameObject.AddComponent<NetworkedStateMachine>();
+            _comboController = GetComponent<ComboController>(); // Get combat controller
 
             if (animator == null)
             {
@@ -78,6 +99,12 @@ namespace _GAME.Scripts.Core
                 {
                     Debug.LogWarning($"[PlayerController] No Animator component found on {gameObject.name}. Animation playback will be disabled.");
                 }
+            }
+
+            // Validate ComboController
+            if (_comboController == null)
+            {
+                Debug.LogWarning($"[PlayerController] No ComboController found on {gameObject.name}. Combat system will be disabled.");
             }
 
             InitializeStateMachine();
@@ -96,28 +123,41 @@ namespace _GAME.Scripts.Core
 
         private void InitializeStateMachine()
         {
-            var idleState = new IdleState(this);
-            var moveState = new MoveState(this);
-            var jumpState = new JumpState(this);
+            var idleState   = new IdleState(this);
+            var moveState   = new MoveState(this);
+            var jumpState   = new JumpState(this);
+            var attackState = new AttackState(this); // NEW: Combat state
 
             _stateMachine.RegisterState(idleState);
             _stateMachine.RegisterState(moveState);
             _stateMachine.RegisterState(jumpState);
+            _stateMachine.RegisterState(attackState); // NEW: Register attack state
 
-            // Add transitions
-            // *** FIX: Removed IsGrounded from these transitions. The FSM will handle landing via transitions from JumpState. ***
+            // EXISTING: Movement transitions
             _stateMachine.AddTransition(idleState, moveState, new FuncPredicate(() => HasMoveInput));
             _stateMachine.AddTransition(moveState, idleState, new FuncPredicate(() => !HasMoveInput));
 
-            // Transitions to JumpState - use direct input check
+            // EXISTING: Jump transitions
             _stateMachine.AddTransition(idleState, jumpState,
                 new FuncPredicate(() => WasJumpPressedThisFrame && CanJump));
             _stateMachine.AddTransition(moveState, jumpState,
                 new FuncPredicate(() => WasJumpPressedThisFrame && CanJump));
 
-            // Transitions from JumpState (when landing)
+            // EXISTING: Landing transitions
             _stateMachine.AddTransition(jumpState, idleState, new FuncPredicate(() => IsGrounded && !HasMoveInput));
             _stateMachine.AddTransition(jumpState, moveState, new FuncPredicate(() => IsGrounded && HasMoveInput));
+
+            // NEW: Attack transitions - from ground states to attack
+            _stateMachine.AddTransition(idleState, attackState,
+                new FuncPredicate(() => WasAttackPressedThisFrame && IsGrounded && CanStartAttack()));
+            _stateMachine.AddTransition(moveState, attackState,
+                new FuncPredicate(() => WasAttackPressedThisFrame && IsGrounded && CanStartAttack()));
+
+            // NEW: Attack completion transitions - from attack back to movement
+            _stateMachine.AddTransition(attackState, idleState,
+                new FuncPredicate(() => IsAttackComplete() && !HasMoveInput));
+            _stateMachine.AddTransition(attackState, moveState,
+                new FuncPredicate(() => IsAttackComplete() && HasMoveInput));
 
             _stateMachine.InitializeStateMachine(idleState);
         }
@@ -135,8 +175,9 @@ namespace _GAME.Scripts.Core
 
         public override void FixedUpdateNetwork()
         {
-            // Reset consumption flag at start of each tick
+            // Reset consumption flags at start of each tick
             _jumpInputConsumedThisFrame = false;
+            AttackInputConsumed         = false;
 
             if (GetInput(out NetworkInputData input))
             {
@@ -156,11 +197,16 @@ namespace _GAME.Scripts.Core
             }
         }
 
+        public void ConsumeAttackInput()
+        {
+            AttackInputConsumed = true;
+            if (enableCombatLogs) Debug.Log("[PlayerController] Attack input consumed");
+        }
+
         public void ConsumeJumpInput()
         {
             _jumpInputConsumedThisFrame = true;
-            if (enableAnimationLogs)
-                Debug.Log("[PlayerController] Jump input consumed");
+            if (enableAnimationLogs) Debug.Log("[PlayerController] Jump input consumed");
         }
 
         public void Move(float horizontalInput)
@@ -200,8 +246,7 @@ namespace _GAME.Scripts.Core
             // CONSUME the jump input immediately after use
             ConsumeJumpInput();
 
-            if (enableAnimationLogs)
-                Debug.Log($"[PlayerController] Performed jump {JumpsUsed}/{MAX_JUMPS}");
+            if (enableAnimationLogs) Debug.Log($"[PlayerController] Performed jump {JumpsUsed}/{MAX_JUMPS}");
         }
 
         public void HandleAirMovement(float horizontalInput)
@@ -229,7 +274,6 @@ namespace _GAME.Scripts.Core
             );
         }
 
-        // ... (rest of the file remains the same)
         public void PlayAnimation(string animationName)
         {
             if (string.IsNullOrEmpty(animationName))
@@ -247,6 +291,44 @@ namespace _GAME.Scripts.Core
             {
                 if (enableAnimationLogs) Debug.LogWarning($"[PlayerController] No Animator component found, cannot play animation: {animationName}");
             }
+        }
+
+        /// <summary>
+        /// Get current attack input type from network input
+        /// Used by combat states to determine which attack to perform
+        /// </summary>
+        public AttackInputType GetCurrentAttackInputType()
+        {
+            return _currentFrameInput.attackInputType;
+        }
+
+        /// <summary>
+        /// Check if player has movement input (for combo system)
+        /// </summary>
+        public bool HasMovementInput()
+        {
+            return _currentFrameInput.HasMovementInput();
+        }
+
+        /// <summary>
+        /// Check if player can start a new attack
+        /// Used by state machine transitions
+        /// </summary>
+        public bool CanStartAttack()
+        {
+            if (_comboController == null) return false;
+
+            var inputType = GetCurrentAttackInputType();
+            return _comboController.CanPerformAttack(inputType);
+        }
+
+        /// <summary>
+        /// Check if current attack sequence is complete
+        /// Used by state machine transitions
+        /// </summary>
+        public bool IsAttackComplete()
+        {
+            return _comboController?.IsAttackComplete() ?? true;
         }
 
         private void UpdateCharacterDirection()
