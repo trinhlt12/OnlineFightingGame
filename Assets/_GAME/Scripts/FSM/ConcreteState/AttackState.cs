@@ -7,19 +7,24 @@ namespace _GAME.Scripts.FSM.ConcreteState
     using UnityEngine;
 
     /// <summary>
-    /// Attack state - handles all combat logic and combo execution
-    /// Integrates with ComboController for validation and timing
-    /// Handles combo progression internally to avoid state transition overhead
-    /// FIXED: Now includes the missing AttackPhase update logic!
+    /// REFACTORED: Attack state for FSM management ONLY
+    /// SINGLE RESPONSIBILITY: Handle state transitions and coordinate with ComboController
+    /// All combat logic is delegated to ComboController for clean separation of concerns
     /// </summary>
     public class AttackState : NetworkedBaseState<PlayerController>
     {
+        // ==================== COMPONENTS ====================
         private ComboController _comboController;
-        private AttackDataSO    _currentAttack;
-        private int             _lastHitboxCheckFrame = -1;
-        private bool            _hasTriggeredHitbox   = false;
 
-        [Header("Combat Settings")] private bool _enableCombatLogs = true;
+        // ==================== STATE TRACKING ====================
+        private AttackDataSO _currentAttackData;
+        private int          _lastHitboxCheckFrame = -1;
+        private bool         _hasHitThisAttack     = false;
+
+        // ==================== SETTINGS ====================
+        [Header("Debug Settings")] private readonly bool _enableCombatLogs = true;
+
+        // ==================== LIFECYCLE ====================
 
         public AttackState(PlayerController controller) : base(controller, "")
         {
@@ -33,307 +38,264 @@ namespace _GAME.Scripts.FSM.ConcreteState
 
         public override void EnterState()
         {
+            if (!ValidateComponents())
+            {
+                ForceExitToIdle();
+                return;
+            }
+
             if (!HasStateAuthority)
             {
-                // Clients still need to enter the state for visual consistency
+                // Clients enter for visual consistency
                 base.EnterState();
                 return;
             }
 
-            // Server-side: Get current attack data and validate
-            _currentAttack = _comboController?.GetCurrentAttack();
-            if (_currentAttack == null)
-            {
-                if (_enableCombatLogs) Debug.LogError("[AttackState] No current attack data available!");
+            // SERVER: Execute initial attack or validate combo continuation
+            bool attackExecuted = false;
 
-                // Exit to idle if no attack data
+            if (!_comboController.IsInCombo)
+            {
+                // Starting new combo
+                attackExecuted = TryExecuteInitialAttack();
+            }
+            else if (_comboController.IsInComboWindow())
+            {
+                // Continuing existing combo
+                attackExecuted = TryExecuteComboAttack();
+            }
+
+            if (!attackExecuted)
+            {
+                if (_enableCombatLogs) Debug.LogWarning("[AttackState] Failed to execute attack, exiting to idle");
                 ForceExitToIdle();
                 return;
             }
 
-            // Set animation name dynamically based on current attack
-            // This allows each attack in combo to have different animations
-            SetCurrentAnimation(_currentAttack.AnimationName);
+            // Update current attack data and animation
+            _currentAttackData = _comboController.GetCurrentExecutingAttack();
+            if (_currentAttackData != null)
+            {
+                SetAnimationName(_currentAttackData.AnimationName);
+                base.EnterState();
+                ResetAttackFlags();
 
-            base.EnterState();
-
-            // Initialize attack state
-            ResetAttackState();
-
-            if (_enableCombatLogs) Debug.Log($"[AttackState] Entered with attack: {_currentAttack.AttackName}");
+                if (_enableCombatLogs) Debug.Log($"[AttackState] Entered with attack: {_currentAttackData.AttackName}");
+            }
+            else
+            {
+                Debug.LogError("[AttackState] No current attack data available after execution!");
+                ForceExitToIdle();
+            }
         }
 
         public override void StateFixedUpdate()
         {
-            if (!HasStateAuthority) return;
+            if (!HasStateAuthority || !ValidateComponents()) return;
 
-            // Validate we still have attack data
-            if (_currentAttack == null)
-            {
-                ForceExitToIdle();
-                return;
-            }
+            // ComboController handles all timing updates automatically
+            // We just need to handle hitbox detection and combo input
 
-            // REMOVED: UpdateAttackPhase() - Now handled by ComboController
-            // ComboController is the single source of truth for attack phases
+            HandleHitboxDetection();
+            HandleComboInput();
 
-            // Check for hitbox activation during active frames
-            HandleHitboxLogic();
-
-            // Handle combo input for continuation
-            HandleComboProgression();
-
-            // Check if attack sequence is complete
+            // Check if we should exit attack state
             if (_comboController.IsAttackComplete())
             {
-                // Attack finished, exit to appropriate movement state
-                ExitToMovementState();
+                if (_enableCombatLogs) Debug.Log("[AttackState] Attack sequence complete, ready to exit");
+                // FSM will handle transition based on movement input
             }
         }
 
         public override void StateUpdate()
         {
             // Visual updates on all clients
-            // Animation and VFX updates happen here
-
-            // Update visual effects based on attack phase
             UpdateVisualEffects();
         }
 
         public override void ExitState()
         {
+            if (_enableCombatLogs) Debug.Log("[AttackState] Exiting attack state");
+
+            ResetAttackFlags();
             base.ExitState();
-
-            // Clean up attack state
-            ResetAttackState();
-
-            if (_enableCombatLogs) Debug.Log("[AttackState] Exited attack state");
         }
 
-        /*/// <summary>
-        /// Update attack phase based on elapsed time - THE MISSING LOGIC!
-        /// This was originally in ComboController but needs to be here for state-driven approach
-        /// </summary>
-        private void UpdateAttackPhase()
-        {
-            if (_currentAttack == null) return;
-
-            // Calculate elapsed frames since attack started
-            int elapsedFrames = Runner.Tick - _comboController.AttackStartTick;
-
-            // Update attack phase based on elapsed time
-            if (elapsedFrames < _currentAttack.StartupFrames)
-            {
-                _comboController.AttackPhase = AttackPhase.Startup;
-            }
-            else if (elapsedFrames < _currentAttack.StartupFrames + _currentAttack.ActiveFrames)
-            {
-                _comboController.AttackPhase = AttackPhase.Active;
-            }
-            else if (elapsedFrames < _currentAttack.TotalFrames)
-            {
-                _comboController.AttackPhase = AttackPhase.Recovery;
-            }
-            else if (elapsedFrames < _currentAttack.ComboInputWindow)
-            {
-                _comboController.AttackPhase = AttackPhase.ComboWindow;
-
-                // Start combo window timer if not already running
-                if (_comboController.ComboWindowTimer.ExpiredOrNotRunning(Runner))
-                {
-                    _comboController.ComboWindowTimer = TickTimer.CreateFromTicks(Runner, _currentAttack.ComboWindowFrames);
-                }
-            }
-            else
-            {
-                // Attack completely finished and combo window expired
-                _comboController.AttackPhase = AttackPhase.None;
-                // This will trigger IsAttackComplete() to return true, allowing FSM to exit AttackState
-            }
-
-            if (_enableCombatLogs && Runner.Tick % 10 == 0) // Log every 10 ticks to avoid spam
-            {
-                Debug.Log($"[AttackState] Phase: {_comboController.AttackPhase}, Elapsed: {elapsedFrames}/{_currentAttack.TotalFrames}");
-            }
-        }*/
+        // ==================== ATTACK EXECUTION ====================
 
         /// <summary>
-        /// Handle hitbox logic during active frames
+        /// Try to execute initial attack (starting new combo)
         /// </summary>
-        private void HandleHitboxLogic()
+        private bool TryExecuteInitialAttack()
         {
-            if (_comboController.AttackPhase == AttackPhase.Active)
-            {
-                // Only check hitbox once per frame during active phase
-                int currentFrame = Runner.Tick - _comboController.AttackStartTick;
+            var inputType = entity.GetCurrentAttackInputType();
 
-                if (currentFrame != _lastHitboxCheckFrame)
-                {
-                    _lastHitboxCheckFrame = currentFrame;
-                    PerformHitboxCheck();
-                }
+            if (_enableCombatLogs) Debug.Log($"[AttackState] Attempting initial attack with input: {inputType}");
+
+            bool success = _comboController.TryExecuteAttack(inputType);
+
+            if (success)
+            {
+                entity.ConsumeAttackInput();
             }
+
+            return success;
         }
 
         /// <summary>
-        /// Handle combo progression logic
-        /// This replaces the state machine transition approach
+        /// Try to execute combo continuation attack
         /// </summary>
-        private void HandleComboProgression()
+        private bool TryExecuteComboAttack()
         {
-            // Only process combo input during combo window
-            if (_comboController.AttackPhase != AttackPhase.ComboWindow) return;
+            var inputType = entity.GetCurrentAttackInputType();
 
-            // Check if player wants to continue combo
-            if (entity.WasAttackPressedThisFrame && !_comboController.AttackInputConsumed)
+            if (_enableCombatLogs) Debug.Log($"[AttackState] Attempting combo attack with input: {inputType}");
+
+            bool success = _comboController.TryExecuteComboAttack(inputType);
+
+            if (success)
             {
-                var inputType = entity.GetCurrentAttackInputType();
+                entity.ConsumeAttackInput();
 
-                if (_enableCombatLogs) Debug.Log($"[AttackState] Combo input detected: {inputType}");
-
-                // Validate if we can continue the combo
-                if (_comboController.CanPerformAttack(inputType))
+                // Update to new attack data without exiting state
+                _currentAttackData = _comboController.GetCurrentExecutingAttack();
+                if (_currentAttackData != null)
                 {
-                    // Execute next attack in combo
-                    _comboController.ExecuteAttack(inputType);
-                    entity.ConsumeAttackInput();
+                    SetAnimationName(_currentAttackData.AnimationName);
+                    PlayCustomAnimation(_currentAttackData.AnimationName);
+                    ResetAttackFlags();
 
-                    // Update to next attack data
-                    TriggerNextComboAttack();
-                }
-                else
-                {
-                    if (_enableCombatLogs) Debug.Log("[AttackState] Combo input rejected - resetting combo");
-
-                    // Invalid combo input, reset
-                    _comboController.ResetCombo();
-                    ExitToMovementState();
+                    if (_enableCombatLogs) Debug.Log($"[AttackState] Combo continued with: {_currentAttackData.AttackName}");
                 }
             }
+
+            return success;
+        }
+
+        // ==================== HITBOX SYSTEM ====================
+
+        /// <summary>
+        /// Handle hitbox detection during active frames
+        /// </summary>
+        private void HandleHitboxDetection()
+        {
+            if (!_comboController.IsHitboxActive() || _hasHitThisAttack) return;
+
+            // Only check once per frame during active phase
+            int currentFrame = _comboController.GetElapsedAttackFrames();
+            if (currentFrame == _lastHitboxCheckFrame) return;
+
+            _lastHitboxCheckFrame = currentFrame;
+            PerformHitboxCheck();
         }
 
         /// <summary>
-        /// Trigger next attack in combo sequence
-        /// Updates attack data and resets state without exiting/entering
-        /// </summary>
-        private void TriggerNextComboAttack()
-        {
-            // Get the next attack data (ComboController already incremented index)
-            _currentAttack = _comboController.GetPreviousAttack(); // The one we just started
-
-            if (_currentAttack == null)
-            {
-                if (_enableCombatLogs) Debug.LogError("[AttackState] Failed to get next attack data!");
-                ExitToMovementState();
-                return;
-            }
-
-            // Reset attack state for new attack
-            ResetAttackState();
-
-            // REMOVED: _comboController.AttackStartTick = Runner.Tick;
-            // ComboController handles its own timing now
-
-            // Update animation for new attack
-            SetCurrentAnimation(_currentAttack.AnimationName);
-            PlayCustomAnimation(_currentAttack.AnimationName);
-
-            if (_enableCombatLogs) Debug.Log($"[AttackState] Triggered next combo attack: {_currentAttack.AttackName}");
-        }
-
-        /// <summary>
-        /// Perform hitbox collision detection
-        /// This is where actual combat hits are processed
+        /// Perform actual hitbox collision detection
         /// </summary>
         private void PerformHitboxCheck()
         {
-            if (_currentAttack == null || _hasTriggeredHitbox) return;
+            var (center, size, layers) = _comboController.GetHitboxData();
 
-            // Calculate hitbox position relative to player
-            Vector2 hitboxCenter = (Vector2)entity.transform.position + GetAdjustedHitboxOffset();
-            Vector2 hitboxSize   = _currentAttack.HitboxSize;
+            if (size == Vector2.zero) return;
 
             // Perform overlap detection
-            var hitColliders = Physics2D.OverlapBoxAll(
-                hitboxCenter,
-                hitboxSize,
-                0f,
-                _currentAttack.HitLayers
-            );
+            var hitColliders = Physics2D.OverlapBoxAll(center, size, 0f, layers);
 
             foreach (var collider in hitColliders)
             {
                 // Skip self
                 if (collider.transform == entity.transform) continue;
 
-                // Check if target is valid for hitting
+                // Check for valid target
                 var targetPlayer = collider.GetComponent<PlayerController>();
                 if (targetPlayer != null && targetPlayer != entity)
                 {
-                    ProcessHit(targetPlayer);
-                    _hasTriggeredHitbox = true; // Prevent multiple hits per attack
-                    break;                      // Only hit one target per attack
+                    ProcessSuccessfulHit(targetPlayer);
+                    _hasHitThisAttack = true; // Prevent multiple hits per attack
+                    break;                    // Only hit one target per attack
                 }
             }
 
-            // Debug visualization in Scene view
+            // Debug visualization
             if (_enableCombatLogs && Application.isEditor)
             {
-                // Draw hitbox outline for debugging
-                DrawHitboxDebug(hitboxCenter, hitboxSize);
+                DrawHitboxDebug(center, size);
             }
         }
 
         /// <summary>
         /// Process successful hit on target
         /// </summary>
-        private void ProcessHit(PlayerController target)
+        private void ProcessSuccessfulHit(PlayerController target)
         {
-            if (_currentAttack == null || target == null) return;
+            _comboController.ProcessHit(target);
 
-            // Calculate damage (with combo scaling if applicable)
-            float damage = _comboController.GetComboDefinition()?.GetScaledDamage(_comboController.CurrentComboIndex - 1)
-                ?? _currentAttack.Damage;
-
-            // Calculate knockback
-            Vector2 knockbackDirection = entity.IsFacingRight ? Vector2.right : Vector2.left;
-            Vector2 knockbackForce = new Vector2(
-                knockbackDirection.x * _currentAttack.KnockbackForce.x,
-                _currentAttack.KnockbackForce.y
-            );
-
-            // Add energy for successful hit
-            _comboController.AddEnergy(_currentAttack.EnergyGain);
+            if (_enableCombatLogs) Debug.Log($"[AttackState] Successfully hit {target.name}");
 
             // TODO: Apply damage and knockback to target
-            // target.TakeDamage(damage);
-            // target.ApplyKnockback(knockbackForce, _currentAttack.HitstunFrames);
+            // This would be handled by a separate DamageSystem component
+            // target.GetComponent<DamageReceiver>()?.TakeDamage(damage, knockback, hitstun);
+        }
 
-            // CHANGED: Use new hit confirmation RPC instead of attack execution RPC
-            _comboController.RPC_AttackHit(
-                (byte)(_comboController.CurrentComboIndex - 1),
-                target.transform.position,
-                target.Object.InputAuthority
-            );
+        // ==================== COMBO INPUT HANDLING ====================
 
-            if (_enableCombatLogs) Debug.Log($"[AttackState] Hit {target.name} for {damage} damage with {_currentAttack.AttackName}");
+        /// <summary>
+        /// Handle combo input during combo window
+        /// </summary>
+        private void HandleComboInput()
+        {
+            // Only process combo input during combo window
+            if (!_comboController.IsInComboWindow()) return;
+
+            // Check for new attack input
+            if (entity.WasAttackPressedThisFrame)
+            {
+                var inputType = entity.GetCurrentAttackInputType();
+
+                if (_enableCombatLogs) Debug.Log($"[AttackState] Combo input detected: {inputType}");
+
+                // Try to continue combo
+                if (_comboController.TryExecuteComboAttack(inputType))
+                {
+                    entity.ConsumeAttackInput();
+                    TriggerNextComboAttack();
+                }
+                else
+                {
+                    if (_enableCombatLogs) Debug.Log("[AttackState] Invalid combo input - ending combo");
+
+                    // Invalid combo input ends the combo
+                    _comboController.ResetCombo();
+                }
+            }
         }
 
         /// <summary>
-        /// Get hitbox offset adjusted for player facing direction
+        /// Handle transition to next combo attack
         /// </summary>
-        private Vector2 GetAdjustedHitboxOffset()
+        private void TriggerNextComboAttack()
         {
-            Vector2 offset = _currentAttack.HitboxOffset;
+            // Update attack data for new combo attack
+            _currentAttackData = _comboController.GetCurrentExecutingAttack();
 
-            // Flip X offset based on facing direction
-            if (!entity.IsFacingRight)
+            if (_currentAttackData == null)
             {
-                offset.x = -offset.x;
+                Debug.LogError("[AttackState] Failed to get next combo attack data!");
+                ForceExitToIdle();
+                return;
             }
 
-            return offset;
+            // Reset for new attack
+            ResetAttackFlags();
+
+            // Update animation
+            SetAnimationName(_currentAttackData.AnimationName);
+            PlayCustomAnimation(_currentAttackData.AnimationName);
+
+            if (_enableCombatLogs) Debug.Log($"[AttackState] Combo continued to: {_currentAttackData.AttackName}");
         }
+
+        // ==================== VISUAL EFFECTS ====================
 
         /// <summary>
         /// Update visual effects based on current attack phase
@@ -342,93 +304,90 @@ namespace _GAME.Scripts.FSM.ConcreteState
         {
             if (_comboController == null) return;
 
-            // Update visual effects based on attack phase
+            // Visual effects based on attack phase
             switch (_comboController.AttackPhase)
             {
                 case AttackPhase.Startup:
-                    // TODO: Show wind-up effects
+                    // TODO: Wind-up effects
                     break;
 
                 case AttackPhase.Active:
-                    // TODO: Show active hit effects, screen shake, etc.
+                    // TODO: Active hit effects
                     break;
 
                 case AttackPhase.Recovery:
-                    // TODO: Show recovery effects
+                    // TODO: Recovery effects
                     break;
 
                 case AttackPhase.ComboWindow:
-                    // TODO: Show combo input indicator
+                    // TODO: Combo input indicator
                     break;
             }
         }
 
-        /// <summary>
-        /// Draw hitbox debug visualization using Debug.DrawLine
-        /// </summary>
-        private void DrawHitboxDebug(Vector2 center, Vector2 size)
-        {
-            // Calculate corners of the hitbox
-            Vector2 halfSize    = size * 0.5f;
-            Vector2 topLeft     = new Vector2(center.x - halfSize.x, center.y + halfSize.y);
-            Vector2 topRight    = new Vector2(center.x + halfSize.x, center.y + halfSize.y);
-            Vector2 bottomLeft  = new Vector2(center.x - halfSize.x, center.y - halfSize.y);
-            Vector2 bottomRight = new Vector2(center.x + halfSize.x, center.y - halfSize.y);
+        // ==================== UTILITY METHODS ====================
 
-            // Draw the rectangle outline
-            Debug.DrawLine(topLeft, topRight, Color.red, 0.1f);       // Top edge
-            Debug.DrawLine(topRight, bottomRight, Color.red, 0.1f);   // Right edge
-            Debug.DrawLine(bottomRight, bottomLeft, Color.red, 0.1f); // Bottom edge
-            Debug.DrawLine(bottomLeft, topLeft, Color.red, 0.1f);     // Left edge
+        /// <summary>
+        /// Validate required components
+        /// </summary>
+        private bool ValidateComponents()
+        {
+            if (_comboController == null)
+            {
+                Debug.LogError("[AttackState] ComboController is null!");
+                return false;
+            }
+
+            if (entity == null)
+            {
+                Debug.LogError("[AttackState] PlayerController entity is null!");
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
-        /// Reset attack-specific state variables
+        /// Reset attack-specific flags
         /// </summary>
-        private void ResetAttackState()
+        private void ResetAttackFlags()
         {
             _lastHitboxCheckFrame = -1;
-            _hasTriggeredHitbox   = false;
+            _hasHitThisAttack     = false;
         }
 
         /// <summary>
-        /// Set the current animation name for this attack
-        /// </summary>
-        private void SetCurrentAnimation(string animationName)
-        {
-            /*// Update the base class animation name
-            // This is a bit hacky but necessary for dynamic animation names
-            var field = typeof(NetworkedBaseState<PlayerController>).GetField("animationName",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            field?.SetValue(this, animationName);*/
-            base.SetAnimationName(animationName);
-        }
-
-        /// <summary>
-        /// Force exit to idle state (error recovery)
+        /// Force exit to idle state for error recovery
         /// </summary>
         private void ForceExitToIdle()
         {
             if (_enableCombatLogs) Debug.LogWarning("[AttackState] Force exiting to idle due to error");
 
             _comboController?.ResetCombo();
-            // The state machine will handle the transition based on current conditions
+            // FSM will handle the transition to idle based on conditions
         }
 
         /// <summary>
-        /// Exit to appropriate movement state based on input
+        /// Draw hitbox debug visualization
         /// </summary>
-        private void ExitToMovementState()
+        private void DrawHitboxDebug(Vector2 center, Vector2 size)
         {
-            // The state machine will automatically transition based on movement input
-            // through the existing transitions in PlayerController.InitializeStateMachine()
+            Vector2 halfSize    = size * 0.5f;
+            Vector2 topLeft     = new Vector2(center.x - halfSize.x, center.y + halfSize.y);
+            Vector2 topRight    = new Vector2(center.x + halfSize.x, center.y + halfSize.y);
+            Vector2 bottomLeft  = new Vector2(center.x - halfSize.x, center.y - halfSize.y);
+            Vector2 bottomRight = new Vector2(center.x + halfSize.x, center.y - halfSize.y);
 
-            if (_enableCombatLogs) Debug.Log("[AttackState] Attack sequence complete, transitioning to movement state");
+            Debug.DrawLine(topLeft, topRight, Color.red, 0.1f);
+            Debug.DrawLine(topRight, bottomRight, Color.red, 0.1f);
+            Debug.DrawLine(bottomRight, bottomLeft, Color.red, 0.1f);
+            Debug.DrawLine(bottomLeft, topLeft, Color.red, 0.1f);
         }
 
+        // ==================== STATE QUERIES ====================
+
         /// <summary>
-        /// Check if we should exit attack state
-        /// Used by state machine transitions
+        /// Check if attack state should exit (for FSM transitions)
         /// </summary>
         public bool ShouldExitAttackState()
         {
@@ -440,15 +399,23 @@ namespace _GAME.Scripts.FSM.ConcreteState
         /// </summary>
         public AttackDataSO GetCurrentAttackData()
         {
-            return _currentAttack;
+            return _currentAttackData;
         }
 
         /// <summary>
-        /// Enable/disable combat logging
+        /// Check if currently in combo window (for FSM transitions)
         /// </summary>
-        public void SetCombatLogging(bool enabled)
+        public bool IsInComboWindow()
         {
-            _enableCombatLogs = enabled;
+            return _comboController?.IsInComboWindow() ?? false;
+        }
+
+        /// <summary>
+        /// Check if can continue combo (for FSM transitions)
+        /// </summary>
+        public bool CanContinueCombo()
+        {
+            return _comboController?.ShouldContinueCombo() ?? false;
         }
     }
 }

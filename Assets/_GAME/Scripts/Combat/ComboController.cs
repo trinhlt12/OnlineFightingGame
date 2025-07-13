@@ -6,8 +6,9 @@ using _GAME.Scripts.Core;
 namespace _GAME.Scripts.Combat
 {
     /// <summary>
-    /// Core combo management component - handles all combo logic and validation
-    /// This is the "brain" of the combat system that coordinates between input and execution
+    /// REFACTORED: Core combo management component
+    /// SINGLE RESPONSIBILITY: Manage combo state, validation, and network synchronization ONLY
+    /// All attack execution and timing is now handled here, AttackState only manages FSM transitions
     /// </summary>
     [RequireComponent(typeof(PlayerController))]
     public class ComboController : NetworkBehaviour
@@ -20,26 +21,25 @@ namespace _GAME.Scripts.Combat
         [Header("Debug")] [SerializeField] private bool enableDebugLogs    = true;
         [SerializeField]                   private bool showComboDebugInfo = false;
 
-        // Network synchronized properties
-        [Networked] public byte      CurrentComboIndex   { get; private set; } = 0;
-        [Networked] public byte      CurrentAttackPhase  { get; set; }         = 0;
-        [Networked] public TickTimer AttackStateTimer    { get; set; }
-        [Networked] public TickTimer ComboWindowTimer    { get; set; }
-        [Networked] public int       CurrentEnergy       { get; set; }
-        [Networked] public bool      AttackInputConsumed { get; set; }
-        [Networked] public int       AttackStartTick     { get; set; } // Track when attack started
+        // ==================== NETWORK SYNCHRONIZED PROPERTIES ====================
+        [Networked] public byte CurrentComboIndex  { get; private set; } = 0;
+        [Networked] public byte CurrentAttackPhase { get; private set; } = 0;
+        [Networked] public int  AttackStartTick    { get; private set; }
+        [Networked] public int  CurrentEnergy      { get; private set; }
+        [Networked] public bool IsExecutingAttack  { get; private set; }
 
-        // Components
+        // ==================== COMPONENTS ====================
         private PlayerController _playerController;
-        private NetworkInputData _lastProcessedInput;
 
-        // Helper properties for cleaner code
-        public AttackPhase AttackPhase { get => (AttackPhase)CurrentAttackPhase; set => CurrentAttackPhase = (byte)value; }
+        // ==================== PROPERTIES ====================
+        public AttackPhase AttackPhase { get => (AttackPhase)CurrentAttackPhase; private set => CurrentAttackPhase = (byte)value; }
 
         public bool IsInCombo        => CurrentComboIndex > 0;
-        public bool CanContinueCombo => CurrentComboIndex < comboDefinition.ComboLength;
-        public bool IsComboComplete  => CurrentComboIndex >= comboDefinition.ComboLength;
+        public bool IsAttacking      => IsExecutingAttack;
+        public bool CanContinueCombo => CurrentComboIndex < (comboDefinition?.ComboLength ?? 0);
+        public bool IsComboComplete  => CurrentComboIndex >= (comboDefinition?.ComboLength ?? 0);
 
+        // ==================== LIFECYCLE ====================
         public override void Spawned()
         {
             _playerController = GetComponent<PlayerController>();
@@ -47,13 +47,13 @@ namespace _GAME.Scripts.Combat
             if (_playerController == null)
             {
                 Debug.LogError("[ComboController] PlayerController component not found!");
+                enabled = false;
                 return;
             }
 
-            // Initialize energy system
             if (HasStateAuthority)
             {
-                CurrentEnergy = startingEnergy;
+                InitializeEnergySystem();
                 ResetCombo();
             }
 
@@ -66,61 +66,60 @@ namespace _GAME.Scripts.Combat
         {
             if (!HasStateAuthority) return;
 
-            // Reset attack input consumption at start of each tick
-            AttackInputConsumed = false;
-
-            // Handle input processing
-            if (GetInput(out NetworkInputData input))
+            // SINGLE RESPONSIBILITY: Only update attack timing when actively attacking
+            if (IsExecutingAttack)
             {
-                ProcessAttackInput(input);
-                _lastProcessedInput = input;
-            }
-
-            // Update timers and phases
-            UpdateAttackTimers();
-        }
-
-        /// <summary>
-        /// Process attack input and determine if attack should be executed
-        /// </summary>
-        private void ProcessAttackInput(NetworkInputData input)
-        {
-            // Check if attack was pressed this frame and not yet consumed
-            if (input.WasAttackPressedThisFrame() && !AttackInputConsumed)
-            {
-                if (enableDebugLogs) Debug.Log($"[ComboController] Attack input detected: {input.attackInputType} at combo index {CurrentComboIndex}");
-
-                // Validate and execute attack
-                if (CanPerformAttack(input.attackInputType))
-                {
-                    ExecuteAttack(input.attackInputType);
-                    ConsumeAttackInput();
-                }
-                else
-                {
-                    if (enableDebugLogs) Debug.Log($"[ComboController] Attack rejected - validation failed");
-
-                    // Reset combo if invalid attack attempted outside combo window
-                    if (AttackPhase != AttackPhase.ComboWindow)
-                    {
-                        ResetCombo();
-                    }
-                }
+                UpdateAttackTiming();
             }
         }
 
+        // ==================== CORE ATTACK SYSTEM ====================
+
         /// <summary>
-        /// Validate if an attack can be performed with given input type
+        /// Main entry point for attack execution - called by AttackState
         /// </summary>
-        public bool CanPerformAttack(AttackInputType inputType)
+        public bool TryExecuteAttack(AttackInputType inputType)
         {
-            if (comboDefinition == null || !comboDefinition.IsValidCombo())
+            if (!HasStateAuthority)
             {
-                if (enableDebugLogs) Debug.LogError("[ComboController] Invalid combo definition!");
+                Debug.LogWarning("[ComboController] TryExecuteAttack called on non-authority client");
                 return false;
             }
 
-            // Get the attack we're trying to perform
+            if (!CanPerformAttack(inputType))
+            {
+                if (enableDebugLogs) Debug.Log($"[ComboController] Attack validation failed for input: {inputType}");
+                return false;
+            }
+
+            ExecuteAttack(inputType);
+            return true;
+        }
+
+        /// <summary>
+        /// Check if next combo attack can be executed
+        /// </summary>
+        public bool TryExecuteComboAttack(AttackInputType inputType)
+        {
+            if (!HasStateAuthority) return false;
+
+            // Must be in combo window to continue
+            if (AttackPhase != AttackPhase.ComboWindow)
+            {
+                if (enableDebugLogs) Debug.Log("[ComboController] Not in combo window, cannot continue combo");
+                return false;
+            }
+
+            return TryExecuteAttack(inputType);
+        }
+
+        /// <summary>
+        /// Validate if an attack can be performed
+        /// </summary>
+        public bool CanPerformAttack(AttackInputType inputType)
+        {
+            if (!IsConfigurationValid()) return false;
+
             var attackData = comboDefinition.GetAttackAtIndex(CurrentComboIndex);
             if (attackData == null)
             {
@@ -128,17 +127,17 @@ namespace _GAME.Scripts.Combat
                 return false;
             }
 
-            // Validate input type matches attack requirement
+            // Validate input type
             if (attackData.InputType != inputType)
             {
-                if (enableDebugLogs) Debug.Log($"[ComboController] Input type mismatch: expected {attackData.InputType}, got {inputType}");
+                if (enableDebugLogs) Debug.Log($"[ComboController] Input mismatch: expected {attackData.InputType}, got {inputType}");
                 return false;
             }
 
-            // Validate energy requirement
+            // Validate energy
             if (CurrentEnergy < attackData.EnergyCost)
             {
-                if (enableDebugLogs) Debug.Log($"[ComboController] Not enough energy: need {attackData.EnergyCost}, have {CurrentEnergy}");
+                if (enableDebugLogs) Debug.Log($"[ComboController] Insufficient energy: need {attackData.EnergyCost}, have {CurrentEnergy}");
                 return false;
             }
 
@@ -149,28 +148,14 @@ namespace _GAME.Scripts.Combat
                 return false;
             }
 
-            // Validate timing - can attack if not in attack state, or in combo window
-            if (CurrentComboIndex == 0) // First attack
-            {
-                return AttackPhase == AttackPhase.None;
-            }
-            else // Combo continuation
-            {
-                return AttackPhase == AttackPhase.ComboWindow;
-            }
+            return true;
         }
 
         /// <summary>
-        /// Execute an attack - this handles the actual attack logic
+        /// Execute attack with proper network synchronization
         /// </summary>
-        public void ExecuteAttack(AttackInputType inputType)
+        private void ExecuteAttack(AttackInputType inputType)
         {
-            if (!HasStateAuthority)
-            {
-                Debug.LogWarning("[ComboController] ExecuteAttack called on non-authority client");
-                return;
-            }
-
             var attackData = comboDefinition.GetAttackAtIndex(CurrentComboIndex);
             if (attackData == null) return;
 
@@ -179,31 +164,31 @@ namespace _GAME.Scripts.Combat
             // Spend energy
             CurrentEnergy = Mathf.Max(0, CurrentEnergy - attackData.EnergyCost);
 
-            // Setup attack timing
-            AttackStartTick  = Runner.Tick;
-            AttackStateTimer = TickTimer.CreateFromTicks(Runner, attackData.TotalFrames);
-            AttackPhase      = AttackPhase.Startup;
-
-            // Notify all clients about attack execution
-            RPC_AttackExecuted(CurrentComboIndex, Runner.Tick, attackData.AttackName);
+            // Setup attack state
+            AttackStartTick   = Runner.Tick;
+            AttackPhase       = AttackPhase.Startup;
+            IsExecutingAttack = true;
 
             // Advance combo index for next potential attack
             CurrentComboIndex++;
 
+            // Notify all clients about attack execution
+            RPC_AttackExecuted((byte)(CurrentComboIndex - 1), Runner.Tick, attackData.AttackName);
             if (showComboDebugInfo) LogComboState();
         }
 
         /// <summary>
-        /// Update attack timers and phases - MOVED BACK FROM AttackState
+        /// Update attack timing and phases - SINGLE SOURCE OF TRUTH
         /// </summary>
-        private void UpdateAttackTimers()
+        private void UpdateAttackTiming()
         {
-            if (AttackStateTimer.ExpiredOrNotRunning(Runner)) return;
+            var currentAttack = GetCurrentExecutingAttack();
+            if (currentAttack == null)
+            {
+                CompleteAttack();
+                return;
+            }
 
-            var currentAttack = GetPreviousAttack(); // The attack currently being executed
-            if (currentAttack == null) return;
-
-            // Calculate elapsed frames since attack started
             int elapsedFrames = Runner.Tick - AttackStartTick;
 
             // Update attack phase based on elapsed time
@@ -222,28 +207,29 @@ namespace _GAME.Scripts.Combat
             else if (elapsedFrames < currentAttack.ComboInputWindow)
             {
                 AttackPhase = AttackPhase.ComboWindow;
-
-                // Start combo window timer if not already running
-                if (ComboWindowTimer.ExpiredOrNotRunning(Runner))
-                {
-                    ComboWindowTimer = TickTimer.CreateFromTicks(Runner, currentAttack.ComboWindowFrames);
-                }
             }
             else
             {
-                // Attack completely finished and combo window expired
-                CompleteAttackSequence();
+                // Attack and combo window completely finished
+                CompleteAttack();
             }
         }
 
         /// <summary>
-        /// Complete the current attack sequence - called when combo window expires
+        /// Complete current attack and determine next state
         /// </summary>
-        private void CompleteAttackSequence()
+        private void CompleteAttack()
         {
-            if (enableDebugLogs) Debug.Log($"[ComboController] Attack sequence completed - resetting combo");
+            if (enableDebugLogs) Debug.Log("[ComboController] Attack sequence completed");
 
-            ResetCombo();
+            IsExecutingAttack = false;
+            AttackPhase       = AttackPhase.None;
+
+            // Reset combo if no more attacks queued
+            if (!ShouldContinueCombo())
+            {
+                ResetCombo();
+            }
         }
 
         /// <summary>
@@ -255,71 +241,141 @@ namespace _GAME.Scripts.Combat
 
             if (enableDebugLogs && IsInCombo) Debug.Log("[ComboController] Resetting combo state");
 
-            CurrentComboIndex   = 0;
-            AttackPhase         = AttackPhase.None;
-            AttackStateTimer    = default;
-            ComboWindowTimer    = default;
-            AttackInputConsumed = false;
-            AttackStartTick     = 0;
+            CurrentComboIndex = 0;
+            AttackPhase       = AttackPhase.None;
+            IsExecutingAttack = false;
+            AttackStartTick   = 0;
+        }
+
+        // ==================== HITBOX AND DAMAGE SYSTEM ====================
+
+        /// <summary>
+        /// Check if hitbox should be active at current frame
+        /// </summary>
+        public bool IsHitboxActive()
+        {
+            if (!IsExecutingAttack) return false;
+
+            var currentAttack = GetCurrentExecutingAttack();
+            if (currentAttack == null) return false;
+
+            int elapsedFrames = Runner.Tick - AttackStartTick;
+            return currentAttack.IsHitboxActiveAtFrame(elapsedFrames);
         }
 
         /// <summary>
-        /// Get current attack data being executed
+        /// Get hitbox data for current attack
         /// </summary>
-        public AttackDataSO GetCurrentAttack()
+        public (Vector2 center, Vector2 size, LayerMask layers) GetHitboxData()
+        {
+            var attack = GetCurrentExecutingAttack();
+            if (attack == null) return (Vector2.zero, Vector2.zero, 0);
+
+            Vector2 offset = attack.HitboxOffset;
+            if (!_playerController.IsFacingRight)
+            {
+                offset.x = -offset.x;
+            }
+
+            Vector2 center = (Vector2)transform.position + offset;
+            return (center, attack.HitboxSize, attack.HitLayers);
+        }
+
+        /// <summary>
+        /// Process successful hit - called by AttackState
+        /// </summary>
+        public void ProcessHit(PlayerController target)
+        {
+            if (!HasStateAuthority || target == null) return;
+
+            var attack = GetCurrentExecutingAttack();
+            if (attack == null) return;
+
+            // Calculate damage with combo scaling
+            float damage = comboDefinition?.GetScaledDamage(CurrentComboIndex - 1) ?? attack.Damage;
+
+            // Add energy for successful hit
+            AddEnergy(attack.EnergyGain);
+
+            // Notify all clients about hit
+            RPC_AttackHit(
+                (byte)(CurrentComboIndex - 1),
+                target.transform.position,
+                target.Object.InputAuthority,
+                damage
+            );
+
+            if (enableDebugLogs) Debug.Log($"[ComboController] Hit {target.name} for {damage} damage with {attack.AttackName}");
+        }
+
+        // ==================== ENERGY SYSTEM ====================
+
+        private void InitializeEnergySystem()
+        {
+            CurrentEnergy = startingEnergy;
+        }
+
+        public void AddEnergy(int amount)
+        {
+            if (!HasStateAuthority) return;
+
+            CurrentEnergy = Mathf.Clamp(CurrentEnergy + amount, 0, maxEnergy);
+
+            if (enableDebugLogs) Debug.Log($"[ComboController] Energy: {CurrentEnergy}/{maxEnergy} (+{amount})");
+        }
+
+        public bool HasEnoughEnergy(int requiredEnergy)
+        {
+            return CurrentEnergy >= requiredEnergy;
+        }
+
+        // ==================== DATA ACCESS ====================
+
+        public AttackDataSO GetCurrentExecutingAttack()
+        {
+            if (!IsExecutingAttack || CurrentComboIndex == 0) return null;
+            return comboDefinition?.GetAttackAtIndex(CurrentComboIndex - 1);
+        }
+
+        public AttackDataSO GetNextAttack()
         {
             return comboDefinition?.GetAttackAtIndex(CurrentComboIndex);
         }
 
-        /// <summary>
-        /// Get previous attack data (the one currently being executed)
-        /// </summary>
-        public AttackDataSO GetPreviousAttack()
+        public ComboDefinitionSO GetComboDefinition()
         {
-            if (CurrentComboIndex == 0) return null;
-            return comboDefinition?.GetAttackAtIndex(CurrentComboIndex - 1);
+            return comboDefinition;
         }
 
-        /// <summary>
-        /// Check if we should continue combo (for state machine transitions)
-        /// </summary>
+        public int GetElapsedAttackFrames()
+        {
+            return IsExecutingAttack ? Runner.Tick - AttackStartTick : 0;
+        }
+
+        // ==================== STATE QUERIES ====================
+
+        public bool IsAttackComplete()
+        {
+            return !IsExecutingAttack;
+        }
+
         public bool ShouldContinueCombo()
         {
             return AttackPhase == AttackPhase.ComboWindow && CanContinueCombo;
         }
 
-        /// <summary>
-        /// Check if attack sequence is complete (for state machine transitions)
-        /// </summary>
-        public bool IsAttackComplete()
+        public bool IsInStartupPhase()  => AttackPhase == AttackPhase.Startup;
+        public bool IsInActivePhase()   => AttackPhase == AttackPhase.Active;
+        public bool IsInRecoveryPhase() => AttackPhase == AttackPhase.Recovery;
+        public bool IsInComboWindow()   => AttackPhase == AttackPhase.ComboWindow;
+
+        // ==================== VALIDATION ====================
+
+        private bool IsConfigurationValid()
         {
-            return AttackPhase == AttackPhase.None;
+            return comboDefinition != null && comboDefinition.IsValidCombo();
         }
 
-        /// <summary>
-        /// Consume attack input to prevent double-use
-        /// </summary>
-        private void ConsumeAttackInput()
-        {
-            AttackInputConsumed = true;
-            if (enableDebugLogs) Debug.Log("[ComboController] Attack input consumed");
-        }
-
-        /// <summary>
-        /// Add energy (called when attacks hit)
-        /// </summary>
-        public void AddEnergy(int amount)
-        {
-            if (!HasStateAuthority) return;
-
-            CurrentEnergy = Mathf.Min(maxEnergy, CurrentEnergy + amount);
-
-            if (enableDebugLogs) Debug.Log($"[ComboController] Energy added: +{amount} (Total: {CurrentEnergy}/{maxEnergy})");
-        }
-
-        /// <summary>
-        /// Validate component configuration
-        /// </summary>
         private void ValidateConfiguration()
         {
             if (comboDefinition == null)
@@ -337,61 +393,62 @@ namespace _GAME.Scripts.Combat
             if (enableDebugLogs) Debug.Log($"[ComboController] Configuration valid - Combo: {comboDefinition.ComboName} ({comboDefinition.ComboLength} attacks)");
         }
 
-        /// <summary>
-        /// RPC to notify all clients about attack execution
-        /// </summary>
+        // ==================== NETWORK RPCs ====================
+
         [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
         public void RPC_AttackExecuted(byte attackIndex, int startTick, string attackName)
         {
-            if (enableDebugLogs) Debug.Log($"[ComboController] RPC_AttackExecuted received: {attackName} (Index: {attackIndex}) at tick {startTick}");
+            if (enableDebugLogs) Debug.Log($"[ComboController] RPC_AttackExecuted: {attackName} (Index: {attackIndex}) at tick {startTick}");
 
-            // All clients can update visual state here
-            // This is where animation triggers, VFX, SFX would be handled
-
-            // Play attack animation on all clients
-            if (_playerController != null)
+            // Visual effects on all clients
+            var attackData = comboDefinition?.GetAttackAtIndex(attackIndex);
+            if (attackData != null && _playerController != null)
             {
-                var attackData = comboDefinition?.GetAttackAtIndex(attackIndex);
-                if (attackData != null)
-                {
-                    _playerController.PlayAnimation(attackData.AnimationName);
-                }
+                _playerController.PlayAnimation(attackData.AnimationName);
             }
         }
 
-        /// <summary>
-        /// Debug method to log current combo state
-        /// </summary>
+        [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
+        public void RPC_AttackHit(byte attackIndex, Vector3 hitPosition, PlayerRef targetPlayer, float damage)
+        {
+            if (enableDebugLogs) Debug.Log($"[ComboController] RPC_AttackHit: Attack {attackIndex} hit {targetPlayer} for {damage} damage at {hitPosition}");
+
+            // Hit effects on all clients
+            var attackData = comboDefinition?.GetAttackAtIndex(attackIndex);
+            if (attackData != null)
+            {
+                // TODO: Play hit VFX, SFX, screen shake
+                // PlayHitEffects(hitPosition, attackData, damage);
+            }
+        }
+
+        // ==================== DEBUG ====================
+
         [ContextMenu("Log Combo State")]
         public void LogComboState()
         {
-            if (comboDefinition == null) return;
+            if (!IsConfigurationValid()) return;
 
             Debug.Log($"[ComboController] === Combo State Debug ===");
             Debug.Log($"Combo: {comboDefinition.ComboName}");
             Debug.Log($"Current Index: {CurrentComboIndex}/{comboDefinition.ComboLength}");
             Debug.Log($"Attack Phase: {AttackPhase}");
+            Debug.Log($"Is Executing: {IsExecutingAttack}");
             Debug.Log($"Energy: {CurrentEnergy}/{maxEnergy}");
-            Debug.Log($"Is In Combo: {IsInCombo}");
             Debug.Log($"Can Continue: {CanContinueCombo}");
-            Debug.Log($"Attack Timer Running: {!AttackStateTimer.ExpiredOrNotRunning(Runner)}");
-            Debug.Log($"Combo Window Timer Running: {!ComboWindowTimer.ExpiredOrNotRunning(Runner)}");
 
-            if (IsInCombo)
+            if (IsExecutingAttack)
             {
-                var currentAttack = GetPreviousAttack();
+                var currentAttack = GetCurrentExecutingAttack();
                 if (currentAttack != null)
                 {
-                    int elapsedFrames = Runner.Tick - AttackStartTick;
+                    int elapsedFrames = GetElapsedAttackFrames();
                     Debug.Log($"Current Attack: {currentAttack.AttackName}");
                     Debug.Log($"Elapsed Frames: {elapsedFrames}/{currentAttack.TotalFrames}");
                 }
             }
         }
 
-        /// <summary>
-        /// Force reset combo for debugging
-        /// </summary>
         [ContextMenu("Force Reset Combo")]
         public void ForceResetCombo()
         {
@@ -402,17 +459,8 @@ namespace _GAME.Scripts.Combat
             }
         }
 
-        /// <summary>
-        /// Get combo definition for external systems
-        /// </summary>
-        public ComboDefinitionSO GetComboDefinition()
-        {
-            return comboDefinition;
-        }
+        // ==================== RUNTIME CONFIGURATION ====================
 
-        /// <summary>
-        /// Set combo definition at runtime (useful for character switching)
-        /// </summary>
         public void SetComboDefinition(ComboDefinitionSO newCombo)
         {
             if (!HasStateAuthority)
@@ -426,27 +474,6 @@ namespace _GAME.Scripts.Combat
             ValidateConfiguration();
 
             if (enableDebugLogs) Debug.Log($"[ComboController] Combo definition changed to: {(newCombo ? newCombo.ComboName : "None")}");
-        }
-
-        /// <summary>
-        /// RPC to notify all clients about successful hit
-        /// </summary>
-        [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
-        public void RPC_AttackHit(byte attackIndex, Vector3 hitPosition, PlayerRef targetPlayer)
-        {
-            if (enableDebugLogs) Debug.Log($"[ComboController] RPC_AttackHit received: Attack {attackIndex} hit {targetPlayer} at {hitPosition}");
-
-            // All clients can update hit effects here
-            // This is where hit VFX, SFX, screen shake would be handled
-
-            var attackData = comboDefinition?.GetAttackAtIndex(attackIndex);
-            if (attackData != null)
-            {
-                // TODO: Play hit effects
-                // PlayHitVFX(hitPosition, attackData);
-                // PlayHitSFX(attackData);
-                // TriggerScreenShake(attackData.KnockbackForce);
-            }
         }
     }
 }
