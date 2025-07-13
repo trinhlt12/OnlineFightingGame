@@ -3,12 +3,14 @@ namespace _GAME.Scripts.FSM.ConcreteState
     using _GAME.Scripts.Core;
     using _GAME.Scripts.FSM;
     using _GAME.Scripts.Combat;
+    using Fusion;
     using UnityEngine;
 
     /// <summary>
     /// Attack state - handles all combat logic and combo execution
     /// Integrates with ComboController for validation and timing
     /// Handles combo progression internally to avoid state transition overhead
+    /// FIXED: Now includes the missing AttackPhase update logic!
     /// </summary>
     public class AttackState : NetworkedBaseState<PlayerController>
     {
@@ -72,8 +74,8 @@ namespace _GAME.Scripts.FSM.ConcreteState
                 return;
             }
 
-            // Update attack timing and phases via ComboController
-            // ComboController handles the timing logic, we just respond to it
+            // REMOVED: UpdateAttackPhase() - Now handled by ComboController
+            // ComboController is the single source of truth for attack phases
 
             // Check for hitbox activation during active frames
             HandleHitboxLogic();
@@ -107,6 +109,53 @@ namespace _GAME.Scripts.FSM.ConcreteState
 
             if (_enableCombatLogs) Debug.Log("[AttackState] Exited attack state");
         }
+
+        /*/// <summary>
+        /// Update attack phase based on elapsed time - THE MISSING LOGIC!
+        /// This was originally in ComboController but needs to be here for state-driven approach
+        /// </summary>
+        private void UpdateAttackPhase()
+        {
+            if (_currentAttack == null) return;
+
+            // Calculate elapsed frames since attack started
+            int elapsedFrames = Runner.Tick - _comboController.AttackStartTick;
+
+            // Update attack phase based on elapsed time
+            if (elapsedFrames < _currentAttack.StartupFrames)
+            {
+                _comboController.AttackPhase = AttackPhase.Startup;
+            }
+            else if (elapsedFrames < _currentAttack.StartupFrames + _currentAttack.ActiveFrames)
+            {
+                _comboController.AttackPhase = AttackPhase.Active;
+            }
+            else if (elapsedFrames < _currentAttack.TotalFrames)
+            {
+                _comboController.AttackPhase = AttackPhase.Recovery;
+            }
+            else if (elapsedFrames < _currentAttack.ComboInputWindow)
+            {
+                _comboController.AttackPhase = AttackPhase.ComboWindow;
+
+                // Start combo window timer if not already running
+                if (_comboController.ComboWindowTimer.ExpiredOrNotRunning(Runner))
+                {
+                    _comboController.ComboWindowTimer = TickTimer.CreateFromTicks(Runner, _currentAttack.ComboWindowFrames);
+                }
+            }
+            else
+            {
+                // Attack completely finished and combo window expired
+                _comboController.AttackPhase = AttackPhase.None;
+                // This will trigger IsAttackComplete() to return true, allowing FSM to exit AttackState
+            }
+
+            if (_enableCombatLogs && Runner.Tick % 10 == 0) // Log every 10 ticks to avoid spam
+            {
+                Debug.Log($"[AttackState] Phase: {_comboController.AttackPhase}, Elapsed: {elapsedFrames}/{_currentAttack.TotalFrames}");
+            }
+        }*/
 
         /// <summary>
         /// Handle hitbox logic during active frames
@@ -182,14 +231,14 @@ namespace _GAME.Scripts.FSM.ConcreteState
             // Reset attack state for new attack
             ResetAttackState();
 
+            // REMOVED: _comboController.AttackStartTick = Runner.Tick;
+            // ComboController handles its own timing now
+
             // Update animation for new attack
             SetCurrentAnimation(_currentAttack.AnimationName);
             PlayCustomAnimation(_currentAttack.AnimationName);
 
             if (_enableCombatLogs) Debug.Log($"[AttackState] Triggered next combo attack: {_currentAttack.AttackName}");
-
-            // Note: RPC_AttackExecuted is already called by ComboController.ExecuteAttack()
-            // No need to call it again here to avoid duplicate RPCs
         }
 
         /// <summary>
@@ -246,7 +295,7 @@ namespace _GAME.Scripts.FSM.ConcreteState
             float damage = _comboController.GetComboDefinition()?.GetScaledDamage(_comboController.CurrentComboIndex - 1)
                 ?? _currentAttack.Damage;
 
-            // Apply knockback
+            // Calculate knockback
             Vector2 knockbackDirection = entity.IsFacingRight ? Vector2.right : Vector2.left;
             Vector2 knockbackForce = new Vector2(
                 knockbackDirection.x * _currentAttack.KnockbackForce.x,
@@ -257,12 +306,15 @@ namespace _GAME.Scripts.FSM.ConcreteState
             _comboController.AddEnergy(_currentAttack.EnergyGain);
 
             // TODO: Apply damage and knockback to target
-            // This would integrate with a health/damage system
             // target.TakeDamage(damage);
             // target.ApplyKnockback(knockbackForce, _currentAttack.HitstunFrames);
 
-            // Network sync hit effect to all clients
-            _comboController.RPC_AttackExecuted((byte)(_comboController.CurrentComboIndex - 1), Runner.Tick, _currentAttack.AttackName);
+            // CHANGED: Use new hit confirmation RPC instead of attack execution RPC
+            _comboController.RPC_AttackHit(
+                (byte)(_comboController.CurrentComboIndex - 1),
+                target.transform.position,
+                target.Object.InputAuthority
+            );
 
             if (_enableCombatLogs) Debug.Log($"[AttackState] Hit {target.name} for {damage} damage with {_currentAttack.AttackName}");
         }
@@ -344,11 +396,12 @@ namespace _GAME.Scripts.FSM.ConcreteState
         /// </summary>
         private void SetCurrentAnimation(string animationName)
         {
-            // Update the base class animation name
+            /*// Update the base class animation name
             // This is a bit hacky but necessary for dynamic animation names
             var field = typeof(NetworkedBaseState<PlayerController>).GetField("animationName",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            field?.SetValue(this, animationName);
+            field?.SetValue(this, animationName);*/
+            base.SetAnimationName(animationName);
         }
 
         /// <summary>

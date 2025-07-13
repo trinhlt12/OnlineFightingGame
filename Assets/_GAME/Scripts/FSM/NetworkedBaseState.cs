@@ -9,9 +9,13 @@ namespace _GAME.Scripts.FSM
     /// </summary>
     public abstract class NetworkedBaseState<T> : IState where T : NetworkBehaviour
     {
-        protected readonly T entity;
+        protected readonly T        entity;
         protected readonly Animator animator;
-        protected readonly string animationName;
+        private            string   animationName;
+        protected void SetAnimationName(string newName)
+        {
+            this.animationName = newName;
+        }
 
         // Common animation settings
         protected const float crossFadeDuration = 0.1f;

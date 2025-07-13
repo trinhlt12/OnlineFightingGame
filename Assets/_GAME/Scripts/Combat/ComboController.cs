@@ -194,7 +194,7 @@ namespace _GAME.Scripts.Combat
         }
 
         /// <summary>
-        /// Update attack timers and phases
+        /// Update attack timers and phases - MOVED BACK FROM AttackState
         /// </summary>
         private void UpdateAttackTimers()
         {
@@ -214,7 +214,6 @@ namespace _GAME.Scripts.Combat
             else if (elapsedFrames < currentAttack.StartupFrames + currentAttack.ActiveFrames)
             {
                 AttackPhase = AttackPhase.Active;
-                // TODO: Handle hitbox activation here
             }
             else if (elapsedFrames < currentAttack.TotalFrames)
             {
@@ -427,6 +426,27 @@ namespace _GAME.Scripts.Combat
             ValidateConfiguration();
 
             if (enableDebugLogs) Debug.Log($"[ComboController] Combo definition changed to: {(newCombo ? newCombo.ComboName : "None")}");
+        }
+
+        /// <summary>
+        /// RPC to notify all clients about successful hit
+        /// </summary>
+        [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
+        public void RPC_AttackHit(byte attackIndex, Vector3 hitPosition, PlayerRef targetPlayer)
+        {
+            if (enableDebugLogs) Debug.Log($"[ComboController] RPC_AttackHit received: Attack {attackIndex} hit {targetPlayer} at {hitPosition}");
+
+            // All clients can update hit effects here
+            // This is where hit VFX, SFX, screen shake would be handled
+
+            var attackData = comboDefinition?.GetAttackAtIndex(attackIndex);
+            if (attackData != null)
+            {
+                // TODO: Play hit effects
+                // PlayHitVFX(hitPosition, attackData);
+                // PlayHitSFX(attackData);
+                // TriggerScreenShake(attackData.KnockbackForce);
+            }
         }
     }
 }
