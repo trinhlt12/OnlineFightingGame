@@ -74,6 +74,22 @@ namespace _GAME.Scripts.Combat
         }
 
         // ==================== CORE ATTACK SYSTEM ====================
+        /// <summary>
+        /// Check if input type is compatible with attack requirements
+        /// Fighting game logic: Allow flexibility for better user experience
+        /// </summary>
+        private bool IsInputTypeCompatible(AttackInputType attackRequirement, AttackInputType playerInput)
+        {
+            // If attack requires Neutral, allow ANY input type to trigger it
+            // This enables attacks while moving - essential for fighting games
+            if (attackRequirement == AttackInputType.Neutral)
+            {
+                return true; // Neutral attacks can be triggered by any input
+            }
+
+            // For directional attacks, require exact match
+            return attackRequirement == playerInput;
+        }
 
         /// <summary>
         /// Main entry point for attack execution - called by AttackState
@@ -127,10 +143,10 @@ namespace _GAME.Scripts.Combat
                 return false;
             }
 
-            // Validate input type
-            if (attackData.InputType != inputType)
+            // NEW: Use flexible input compatibility instead of strict matching
+            if (!IsInputTypeCompatible(attackData.InputType, inputType))
             {
-                if (enableDebugLogs) Debug.Log($"[ComboController] Input mismatch: expected {attackData.InputType}, got {inputType}");
+                if (enableDebugLogs) Debug.Log($"[ComboController] Input incompatible: attack requires {attackData.InputType}, got {inputType}");
                 return false;
             }
 
