@@ -283,6 +283,9 @@ namespace _GAME.Scripts.Core
             _rigidbody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             JumpsUsed++;
 
+            IsGrounded = false;
+
+
             ConsumeJumpInput();
 
             if (enableAnimationLogs) Debug.Log($"[PlayerController] Performed jump {JumpsUsed}/{MAX_JUMPS}");
