@@ -296,6 +296,9 @@ namespace _GAME.Scripts.Combat
 
             // Add energy for successful hit
             AddEnergy(attack.EnergyGain);
+            /*
+            Debug.LogWarning($"[ComboController] Hit {target.name} for {damage} damage, gained {attack.EnergyGain} energy");
+            */
 
             // Notify all clients about hit
             RPC_AttackHit(
@@ -304,8 +307,6 @@ namespace _GAME.Scripts.Combat
                 target.Object.InputAuthority,
                 damage
             );
-
-            if (enableDebugLogs) Debug.Log($"[ComboController] Hit {target.name} for {damage} damage with {attack.AttackName}");
         }
 
         // ==================== ENERGY SYSTEM ====================

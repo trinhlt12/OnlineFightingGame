@@ -108,6 +108,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCFloatExtensions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Attributes\KCCLayerAtribute.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\ScriptableKCCProcessorProvider.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Combat\HitboxVisualizer.cs" />
     <Compile Include="Assets\_GAME\Scripts\UI\CharacterSelectionCanvas.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\IKCCProcessorProvider.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Interactions.cs" />
@@ -162,6 +163,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Accumulators\Vector2Accumulator.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\PlayerRecorder.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Events.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Combat\DamageReceiver.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Methods.cs" />
     <Compile Include="Assets\_GAME\Scripts\Combat\ComboDefinitionSO.cs" />
     <Compile Include="Assets\_GAME\Scripts\FSM\NetworkedBaseState.cs" />
@@ -178,6 +180,7 @@
     <Compile Include="Assets\Photon\PhotonLibs\WebSocket\SocketWebTcp.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\StepUpProcessor.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCCInterestProxy.cs" />
+    <Compile Include="Assets\_GAME\Scripts\FSM\ConcreteState\HitState.cs" />
     <Compile Include="Assets\_GAME\Scripts\FSM\ConcreteState\JumpState.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\Collections\KCCFastStack.cs" />
     <Compile Include="Assets\_GAME\Scripts\Core\CombatSystemTester.cs" />

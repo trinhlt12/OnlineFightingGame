@@ -49,7 +49,7 @@ namespace _GAME.Scripts.Core
         // ==================== PROPERTIES ====================
         public Rigidbody2D Rigidbody          => _rigidbody;
         public Animator    Animator           => animator;
-        public bool        HasMoveInput       => Mathf.Abs(CurrentMoveInput) > 0.01f;
+        public bool        HasMoveInput       => _inputEnabled && Mathf.Abs(CurrentMoveInput) > 0.1f;
         public bool        CurrentFacingRight => IsFacingRight;
         public bool        CanJump            => JumpsUsed < MAX_JUMPS;
 
@@ -58,7 +58,7 @@ namespace _GAME.Scripts.Core
         {
             get
             {
-                return _currentFrameInput.WasPressedThisFrame(NetworkButtons.Jump)
+                return _inputEnabled &&_currentFrameInput.WasPressedThisFrame(NetworkButtons.Jump)
                     && !_jumpInputConsumedThisFrame;
             }
         }
@@ -67,7 +67,7 @@ namespace _GAME.Scripts.Core
         {
             get
             {
-                return _currentFrameInput.WasAttackPressedThisFrame()
+                return _inputEnabled &&_currentFrameInput.WasAttackPressedThisFrame()
                     && !_attackInputConsumedThisFrame;
             }
         }
@@ -111,6 +111,7 @@ namespace _GAME.Scripts.Core
                 Debug.LogWarning($"[PlayerController] No ComboController found on {gameObject.name}. Combat will be disabled.");
             }
         }
+        private HitState _hitState;
 
         private void InitializeStateMachine()
         {
@@ -118,12 +119,25 @@ namespace _GAME.Scripts.Core
             var moveState   = new MoveState(this);
             var jumpState   = new JumpState(this);
             var attackState = new AttackState(this);
+            var hitState    = new HitState(this);
+
+            _hitState = hitState;
 
             // Register all states
             _stateMachine.RegisterState(idleState);
             _stateMachine.RegisterState(moveState);
             _stateMachine.RegisterState(jumpState);
             _stateMachine.RegisterState(attackState);
+            _stateMachine.RegisterState(hitState);
+
+            /*_stateMachine.AddAnyTransition(hitState,
+                new FuncPredicate(() => ShouldEnterHitState()));*/
+            _stateMachine.AddTransition(hitState, idleState,
+                new FuncPredicate(() => hitState.CanExitHitState() && IsGrounded && !HasMoveInput));
+            _stateMachine.AddTransition(hitState, moveState,
+                new FuncPredicate(() => hitState.CanExitHitState() && IsGrounded && HasMoveInput));
+            _stateMachine.AddTransition(hitState, jumpState,
+                new FuncPredicate(() => hitState.CanExitHitState() && !IsGrounded));
 
             // Movement transitions
             _stateMachine.AddTransition(idleState, moveState,
@@ -159,6 +173,21 @@ namespace _GAME.Scripts.Core
             // No explicit transition needed - AttackState handles this internally
 
             _stateMachine.InitializeStateMachine(idleState);
+        }
+        public HitState GetHitState()
+        {
+            return _hitState;
+        }
+        private bool _inputEnabled = true;
+        public void SetInputEnabled(bool enabled)
+        {
+            _inputEnabled = enabled;
+        }
+
+        public bool ShouldEnterHitState()
+        {
+            var damageReceiver = GetComponent<DamageReceiver>();
+            return damageReceiver != null && _stateMachine.CurrentState is HitState == false;
         }
 
         private void EnsureInputManager()

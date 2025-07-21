@@ -179,11 +179,11 @@ namespace UI
                 var  localPlayerData   = selections.FirstOrDefault(kvp => kvp.Key == _runner.LocalPlayer);
                 bool isSelectedByLocal = localPlayerData.Key != PlayerRef.None && localPlayerData.Value.CharacterIndex == i;
 
-                // Check if this character is locked (selected by someone else)
-                bool isLocked = selectedCharacters.Contains(i) && !isSelectedByLocal;
+                /*// Check if this character is locked (selected by someone else)
+                bool isLocked = selectedCharacters.Contains(i) && !isSelectedByLocal;*/
 
                 button.SetSelected(isSelectedByLocal);
-                button.SetLocked(isLocked);
+                button.SetLocked(false);
             }
         }
 
