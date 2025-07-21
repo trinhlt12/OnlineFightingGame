@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e88558b7308041dbacf861ca2aa0a560, type: 3}
+  m_Name: Mooni
+  m_EditorClassIdentifier: 
+  CharacterName: Mooni
+  CharacterDescription: 
+  CharacterIcon: {fileID: 925317725, guid: 289eb6f75c0fb174aacc57442a2a285a, type: 3}
+  CharacterPortrait: {fileID: 925317725, guid: 289eb6f75c0fb174aacc57442a2a285a, type: 3}
+  characterPrefab: {fileID: 6816041150095701880, guid: 63b9b9b78ef268a4bb9216c695d16df1,
+    type: 3}
+  PrimaryColor: {r: 1, g: 1, b: 1, a: 1}
+  SecondaryColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  Stats:
+    Speed: 6
+    Strength: 6
+    Defense: 4
+    Agility: 8
+    SpecialAbilityName: 
+    SpecialAbilityDescription: 
+    SpecialAbilityIcon: {fileID: 0}
+    SpeedColor: {r: 0, g: 1, b: 1, a: 1}
+    StrengthColor: {r: 1, g: 0, b: 0, a: 1}
+    DefenseColor: {r: 0, g: 0, b: 1, a: 1}
+    AgilityColor: {r: 0, g: 1, b: 0, a: 1}
+  SelectionSound: {fileID: 0}
+  VoiceLine: {fileID: 0}
