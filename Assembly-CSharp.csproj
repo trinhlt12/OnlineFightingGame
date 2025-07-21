@@ -95,6 +95,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCArrayExtensions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Properties.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Attributes\DisabledInPlayModeAttribute.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Camera\CameraFollow.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\GroundSnapProcessor.cs" />
     <Compile Include="Assets\_GAME\Scripts\Core\NetworkInputData.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\NetworkTRSPProcessor.cs" />
