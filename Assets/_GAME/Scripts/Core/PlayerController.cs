@@ -130,8 +130,8 @@ namespace _GAME.Scripts.Core
             _stateMachine.RegisterState(attackState);
             _stateMachine.RegisterState(hitState);
 
-            _stateMachine.AddAnyTransition(hitState,
-                new FuncPredicate(() => ShouldEnterHitState()));
+            /*_stateMachine.AddAnyTransition(hitState,
+                new FuncPredicate(() => ShouldEnterHitState()));*/
             _stateMachine.AddTransition(hitState, idleState,
                 new FuncPredicate(() => hitState.CanExitHitState() && IsGrounded && !HasMoveInput));
             _stateMachine.AddTransition(hitState, moveState,
