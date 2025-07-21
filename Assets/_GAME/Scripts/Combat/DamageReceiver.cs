@@ -23,6 +23,11 @@ namespace _GAME.Scripts.Combat
         [Header("Debug")]
         [SerializeField] private bool enableDamageDebugLogs = false;
 
+        [Networked] public int     NetworkedHitStartTick      { get; set; }
+        [Networked] public int     NetworkedHitstunFrames     { get; set; }
+        [Networked] public Vector2 NetworkedKnockbackVelocity { get; set; }
+        [Networked] public bool    IsInHitState               { get; set; }
+
         // Network-synchronized properties
         [Networked] private float LastHitTime { get; set; }
         [Networked] private bool IsInvincible { get; set; }
