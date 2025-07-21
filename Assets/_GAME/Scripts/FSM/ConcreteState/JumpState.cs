@@ -6,7 +6,6 @@ namespace _GAME.Scripts.FSM.ConcreteState
 
     /// <summary>
     /// Jump state - handles character jumping and air movement
-    /// Supports double jump as per GDD specifications
     /// </summary>
     public class JumpState : NetworkedBaseState<PlayerController>
     {
@@ -21,10 +20,10 @@ namespace _GAME.Scripts.FSM.ConcreteState
             // First jump when entering state
             if (HasStateAuthority)
             {
-                entity.PerformJump(); // ← This will consume the input
-                var player = entity.GetComponent<PlayerController>();
-                player._rigidbody.gravityScale = 1f;
+                entity.PerformJump();
             }
+            var player = entity.GetComponent<PlayerController>();
+            player._rigidbody.gravityScale = 1f;
         }
 
         public override void StateFixedUpdate()
@@ -40,7 +39,6 @@ namespace _GAME.Scripts.FSM.ConcreteState
                 entity.PerformJump(); // ← This will consume the input
             }
         }
-
 
         public override void ExitState()
         {
