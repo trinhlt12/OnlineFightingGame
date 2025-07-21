@@ -17,10 +17,12 @@ namespace _GAME.Scripts.FSM.ConcreteState
         [Header("Debug")]
         private readonly bool _enableHitLogs;
 
-        // Network-synchronized hit data
+        /*// Network-synchronized hit data
         [Networked] private int HitStartTick { get; set; }
         [Networked] private int HitstunFrames { get; set; }
-        [Networked] private Vector2 KnockbackVelocity { get; set; }
+        [Networked] private Vector2 KnockbackVelocity { get; set; }*/
+
+        private DamageReceiver _damageReceiver;
 
         // Local state tracking
         private Rigidbody2D _rigidbody;
@@ -35,6 +37,7 @@ namespace _GAME.Scripts.FSM.ConcreteState
         {
             _enableHitLogs = enableDebugLogs;
             _rigidbody = controller.GetComponent<Rigidbody2D>();
+            this._damageReceiver = controller.GetComponent<DamageReceiver>();
 
             if (_rigidbody == null)
             {
@@ -51,7 +54,7 @@ namespace _GAME.Scripts.FSM.ConcreteState
             // Initialize hit state (only on authority)
             if (HasStateAuthority)
             {
-                HitStartTick         = Runner.Tick;
+                _damageReceiver.NetworkedHitStartTick         = Runner.Tick;
                 _hasAppliedKnockback = false;
 
                 // Disable player input during hitstun
@@ -97,7 +100,7 @@ namespace _GAME.Scripts.FSM.ConcreteState
 
             // Reset hit-related flags
             _hasAppliedKnockback = false;
-            KnockbackVelocity = Vector2.zero;
+            _damageReceiver.NetworkedKnockbackVelocity = Vector2.zero;
 
             // Clear visual effects
             ClearHitVisualEffects();
@@ -113,24 +116,16 @@ namespace _GAME.Scripts.FSM.ConcreteState
         /// </summary>
         public void InitializeHit(float damage, Vector2 knockback, int hitstunFrames, PlayerController attacker)
         {
-            if (!HasStateAuthority)
-            {
-                Debug.LogError("[HitState] InitializeHit called on non-authority client!");
-                return;
-            }
+            if (!entity.HasStateAuthority) return;
 
-            // Set networked hit data
-            HitstunFrames = hitstunFrames;
-            KnockbackVelocity = knockback;
+            // Set networked data thông qua DamageReceiver
+            _damageReceiver.NetworkedHitStartTick      = entity.Runner.Tick;
+            _damageReceiver.NetworkedHitstunFrames     = hitstunFrames;
+            _damageReceiver.NetworkedKnockbackVelocity = knockback;
+            _damageReceiver.IsInHitState               = true;
+
             _originalKnockback = knockback;
-
-            // Apply damage and energy changes
             ProcessDamageAndEnergy(damage, attacker);
-
-            if (_enableHitLogs)
-            {
-                Debug.Log($"[HitState] Hit initialized - Damage: {damage}, Knockback: {knockback}, Hitstun: {hitstunFrames} frames");
-            }
         }
 
         /// <summary>
@@ -164,10 +159,10 @@ namespace _GAME.Scripts.FSM.ConcreteState
             if (_rigidbody == null) return;
 
             // Apply initial knockback force
-            if (!_hasAppliedKnockback && KnockbackVelocity.magnitude > MIN_KNOCKBACK_THRESHOLD)
+            if (!_hasAppliedKnockback && this._damageReceiver.NetworkedKnockbackVelocity.magnitude > MIN_KNOCKBACK_THRESHOLD)
             {
                 // Face away from knockback direction for visual feedback
-                if (KnockbackVelocity.x != 0)
+                if (_damageReceiver.NetworkedKnockbackVelocity.x != 0)
                 {
                     /*
                     entity.SetFacingDirection(KnockbackVelocity.x < 0);
@@ -175,20 +170,20 @@ namespace _GAME.Scripts.FSM.ConcreteState
                 }
 
                 // Apply knockback velocity
-                _rigidbody.velocity = KnockbackVelocity;
+                _rigidbody.velocity  = _damageReceiver.NetworkedKnockbackVelocity;
                 _hasAppliedKnockback = true;
 
-                if (_enableHitLogs) Debug.Log($"[HitState] Applied knockback velocity: {KnockbackVelocity}");
+                if (_enableHitLogs) Debug.Log($"[HitState] Applied knockback velocity: {_damageReceiver.NetworkedKnockbackVelocity}");
             }
 
             // Decay knockback over time for natural-feeling physics
             if (_hasAppliedKnockback)
             {
-                KnockbackVelocity *= KNOCKBACK_DECAY_RATE;
+                _damageReceiver.NetworkedKnockbackVelocity *= KNOCKBACK_DECAY_RATE;
 
-                if (KnockbackVelocity.magnitude < MIN_KNOCKBACK_THRESHOLD)
+                if (_damageReceiver.NetworkedKnockbackVelocity.magnitude < MIN_KNOCKBACK_THRESHOLD)
                 {
-                    KnockbackVelocity = Vector2.zero;
+                    _damageReceiver.NetworkedKnockbackVelocity = Vector2.zero;
                 }
             }
         }
@@ -198,10 +193,10 @@ namespace _GAME.Scripts.FSM.ConcreteState
         /// </summary>
         public bool IsHitstunComplete()
         {
-            if (HitStartTick == 0) return true; // Not properly initialized
+            if (this._damageReceiver.NetworkedHitStartTick == 0) return true; // Not properly initialized
 
-            int elapsedFrames = Runner.Tick - HitStartTick;
-            return elapsedFrames >= HitstunFrames;
+            int elapsedFrames = Runner.Tick - this._damageReceiver.NetworkedHitStartTick;
+            return elapsedFrames >= this._damageReceiver.NetworkedHitstunFrames;
         }
 
         /// <summary>
@@ -209,10 +204,10 @@ namespace _GAME.Scripts.FSM.ConcreteState
         /// </summary>
         public int GetRemainingHitstunFrames()
         {
-            if (HitStartTick == 0) return 0;
+            if (this._damageReceiver.NetworkedHitStartTick == 0) return 0;
 
-            int elapsedFrames = Runner.Tick - HitStartTick;
-            return Mathf.Max(0, HitstunFrames - elapsedFrames);
+            int elapsedFrames = Runner.Tick - this._damageReceiver.NetworkedHitStartTick;
+            return Mathf.Max(0, _damageReceiver.NetworkedHitstunFrames - elapsedFrames);
         }
 
         // ==================== VISUAL EFFECTS ====================
@@ -297,7 +292,7 @@ namespace _GAME.Scripts.FSM.ConcreteState
         /// </summary>
         public (int remainingFrames, Vector2 knockback, bool isComplete) GetHitData()
         {
-            return (GetRemainingHitstunFrames(), KnockbackVelocity, IsHitstunComplete());
+            return (GetRemainingHitstunFrames(), this._damageReceiver.NetworkedKnockbackVelocity, IsHitstunComplete());
         }
 
     }
