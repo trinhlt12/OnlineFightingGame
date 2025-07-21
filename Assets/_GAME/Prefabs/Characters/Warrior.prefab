@@ -155,6 +155,7 @@ GameObject:
   - component: {fileID: 7085809471747427103}
   - component: {fileID: 3384668816739674924}
   - component: {fileID: 6880295868648242963}
+  - component: {fileID: 7252548706217844053}
   m_Layer: 0
   m_Name: Warrior
   m_TagString: Untagged
@@ -263,6 +264,7 @@ MonoBehaviour:
   - {fileID: 5350508947873633372}
   - {fileID: 7085809471747427103}
   - {fileID: 3384668816739674924}
+  - {fileID: 7252548706217844053}
 --- !u!114 &6730041619278744568
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -377,3 +379,19 @@ MonoBehaviour:
   inactiveHitboxColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   hitboxAlpha: 0.3
   showOnlyDuringAttack: 1
+--- !u!114 &7252548706217844053
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6351667327372901688}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c910c765b948b6b581a0a38af21734, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damageReduction: 0
+  knockbackResistance: 0
+  invincibilityFramesAfterHit: 0.5
+  enableDamageDebugLogs: 0

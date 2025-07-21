@@ -226,15 +226,45 @@ namespace _GAME.Scripts.FSM.ConcreteState
         /// <summary>
         /// Process successful hit on target
         /// </summary>
+        /// <summary>
+        /// Process successful hit on target using new damage system
+        /// </summary>
         private void ProcessSuccessfulHit(PlayerController target)
         {
-            _comboController.ProcessHit(target);
+            if (target == null || _currentAttackData == null) return;
 
-            if (_enableCombatLogs) Debug.Log($"[AttackState] Successfully hit {target.name}");
+            // Get damage receiver component
+            var damageReceiver = target.GetComponent<DamageReceiver>();
+            if (damageReceiver == null)
+            {
+                Debug.LogError($"[AttackState] Target {target.name} has no DamageReceiver component!");
+                return;
+            }
 
-            // TODO: Apply damage and knockback to target
-            // This would be handled by a separate DamageSystem component
-            // target.GetComponent<DamageReceiver>()?.TakeDamage(damage, knockback, hitstun);
+            // Calculate damage and knockback
+            float   damage    = _currentAttackData.Damage;
+            Vector2 knockback = _currentAttackData.KnockbackForce;
+            int     hitstun   = _currentAttackData.HitstunFrames;
+
+            // Apply directional knockback based on attacker facing
+            if (!entity.IsFacingRight)
+            {
+                knockback.x = -knockback.x;
+            }
+
+            // Send damage to target
+            bool hitSuccessful = damageReceiver.TakeDamage(damage, knockback, hitstun, entity);
+
+            if (hitSuccessful)
+            {
+                // Process hit on attacker side (energy gain, combo scaling, etc.)
+                _comboController.ProcessHit(target);
+
+                if (_enableCombatLogs)
+                {
+                    Debug.Log($"[AttackState] Successfully hit {target.name} - Damage: {damage}, Hitstun: {hitstun}");
+                }
+            }
         }
 
         // ==================== COMBO INPUT HANDLING ====================
