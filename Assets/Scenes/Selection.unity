@@ -1612,50 +1612,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healthFillImage: {fileID: 1632837849}
   damageFillImage: {fileID: 534234669}
-  healthBarBackground: {fileID: 737444667}
   playerNameText: {fileID: 1267003765}
-  healthText: {fileID: 1088325931}
-  healthColorGradient:
-    serializedVersion: 2
-    key0: {r: 1, g: 0, b: 0, a: 1}
-    key1: {r: 1, g: 1, b: 1, a: 1}
-    key2: {r: 0, g: 0, b: 0, a: 0}
-    key3: {r: 0, g: 0, b: 0, a: 0}
-    key4: {r: 0, g: 0, b: 0, a: 0}
-    key5: {r: 0, g: 0, b: 0, a: 0}
-    key6: {r: 0, g: 0, b: 0, a: 0}
-    key7: {r: 0, g: 0, b: 0, a: 0}
-    ctime0: 0
-    ctime1: 65535
-    ctime2: 0
-    ctime3: 0
-    ctime4: 0
-    ctime5: 0
-    ctime6: 0
-    ctime7: 0
-    atime0: 0
-    atime1: 65535
-    atime2: 0
-    atime3: 0
-    atime4: 0
-    atime5: 0
-    atime6: 0
-    atime7: 0
-    m_Mode: 0
-    m_ColorSpace: -1
-    m_NumColorKeys: 2
-    m_NumAlphaKeys: 2
+  isLeftSide: 1
+  healthColor: {r: 0, g: 1, b: 0, a: 1}
+  lowHealthColor: {r: 1, g: 0, b: 0, a: 1}
   damageColor: {r: 1, g: 0, b: 0, a: 1}
-  backgroundTint: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  fillMethod: 0
-  invertFill: 0
-  damageAnimationDelay: 0.5
-  damageAnimationSpeed: 2
-  enableDamageAnimation: 1
-  lowHealthEffect: {fileID: 0}
-  lowHealthThreshold: 0.25
-  flashCanvasGroup: {fileID: 0}
-  testInEditor: 0
 --- !u!1 &1214307444
 GameObject:
   m_ObjectHideFlags: 0
@@ -1876,50 +1837,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healthFillImage: {fileID: 325646815}
   damageFillImage: {fileID: 74121082}
-  healthBarBackground: {fileID: 138604303}
   playerNameText: {fileID: 529787191}
-  healthText: {fileID: 764194373}
-  healthColorGradient:
-    serializedVersion: 2
-    key0: {r: 1, g: 0, b: 0, a: 1}
-    key1: {r: 1, g: 1, b: 1, a: 1}
-    key2: {r: 0, g: 0, b: 0, a: 0}
-    key3: {r: 0, g: 0, b: 0, a: 0}
-    key4: {r: 0, g: 0, b: 0, a: 0}
-    key5: {r: 0, g: 0, b: 0, a: 0}
-    key6: {r: 0, g: 0, b: 0, a: 0}
-    key7: {r: 0, g: 0, b: 0, a: 0}
-    ctime0: 0
-    ctime1: 65535
-    ctime2: 0
-    ctime3: 0
-    ctime4: 0
-    ctime5: 0
-    ctime6: 0
-    ctime7: 0
-    atime0: 0
-    atime1: 65535
-    atime2: 0
-    atime3: 0
-    atime4: 0
-    atime5: 0
-    atime6: 0
-    atime7: 0
-    m_Mode: 0
-    m_ColorSpace: -1
-    m_NumColorKeys: 2
-    m_NumAlphaKeys: 2
+  isLeftSide: 1
+  healthColor: {r: 0, g: 1, b: 0, a: 1}
+  lowHealthColor: {r: 1, g: 0, b: 0, a: 1}
   damageColor: {r: 1, g: 0, b: 0, a: 1}
-  backgroundTint: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  fillMethod: 0
-  invertFill: 0
-  damageAnimationDelay: 0.5
-  damageAnimationSpeed: 2
-  enableDamageAnimation: 1
-  lowHealthEffect: {fileID: 0}
-  lowHealthThreshold: 0.25
-  flashCanvasGroup: {fileID: 0}
-  testInEditor: 0
 --- !u!1 &1567618802
 GameObject:
   m_ObjectHideFlags: 0
@@ -2328,20 +2250,11 @@ MonoBehaviour:
   leftHealthBar: {fileID: 1394207240}
   rightHealthBar: {fileID: 1192747103}
   timerText: {fileID: 2021031165}
-  timerBackground: {fileID: 2120531081}
-  normalTimerColor: {r: 1, g: 1, b: 1, a: 1}
-  warningTimerColor: {r: 1, g: 0, b: 0, a: 1}
-  warningTimeThreshold: 10
   roundText: {fileID: 0}
-  player1RoundIndicators: []
-  player2RoundIndicators: []
-  healthAnimationSpeed: 2
-  enableHealthAnimation: 1
-  enableDebugLogs: 0
-  _NetworkedTimeRemaining: 0
-  _NetworkedCurrentRound: 0
-  _NetworkedTimerActive: 0
-  testMode: 0
+  _TimeRemaining: 0
+  _TimerActive: 0
+  _CurrentRound: 0
+  enableTesting: 0
 --- !u!1 &2021031162
 GameObject:
   m_ObjectHideFlags: 0

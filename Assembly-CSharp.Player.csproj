@@ -123,6 +123,7 @@
     <Compile Include="Assets\_GAME\Scripts\MenuImplementation\MenuUIController.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\GenericKCCProcessorProvider.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\KCCTimer.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Combat\HUDIntegrator.cs" />
     <Compile Include="Assets\_GAME\Scripts\UI\UIManager.cs" />
     <Compile Include="Assets\_GAME\Scripts\Singleton.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\KCCProcessorProvider.cs" />

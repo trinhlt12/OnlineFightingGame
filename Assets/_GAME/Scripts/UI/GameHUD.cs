@@ -2,74 +2,67 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion;
-using System.Collections;
 
 namespace _GAME.Scripts.UI
 {
-    using _GAME.Scripts.Core;
-
     /// <summary>
-    /// Main HUD for fighting game - manages health bars, timer, and round display
-    /// Network-synchronized for consistent display across all clients
+    /// Simple Game HUD for fighting game - Game Jam Version
     /// </summary>
     public class GameHUD : NetworkBehaviour
     {
-        [Header("Health Bar Configuration")]
+        [Header("Health Bars")]
         [SerializeField] private HealthBarUI leftHealthBar;
         [SerializeField] private HealthBarUI rightHealthBar;
 
-        [Header("Timer Configuration")]
+        [Header("Timer")]
         [SerializeField] private TextMeshProUGUI timerText;
-        [SerializeField] private Image timerBackground;
-        [SerializeField] private Color normalTimerColor = Color.white;
-        [SerializeField] private Color warningTimerColor = Color.red;
-        [SerializeField] private float warningTimeThreshold = 10f;
 
-        [Header("Round Display")]
+        [Header("Round Info")]
         [SerializeField] private TextMeshProUGUI roundText;
-        [SerializeField] private GameObject[] player1RoundIndicators;
-        [SerializeField] private GameObject[] player2RoundIndicators;
 
-        [Header("Animation Settings")]
-        [SerializeField] private float healthAnimationSpeed = 2f;
-        [SerializeField] private bool enableHealthAnimation = true;
+        // Network synced timer
+        [Networked] public float TimeRemaining { get; set; }
+        [Networked] public bool TimerActive { get; set; }
+        [Networked] public int CurrentRound { get; set; }
 
-        [Header("Debug")]
-        [SerializeField] private bool enableDebugLogs = false;
-
-        // Networked properties for timer synchronization
-        [Networked] public float NetworkedTimeRemaining { get; set; }
-        [Networked] public int NetworkedCurrentRound { get; set; }
-        [Networked] public bool NetworkedTimerActive { get; set; }
-
-        // Player references for health tracking
-        private PlayerController player1Controller;
-        private PlayerController player2Controller;
-
-        // Animation coroutines
-        private Coroutine leftHealthAnimCoroutine;
-        private Coroutine rightHealthAnimCoroutine;
+        // Player health tracking
+        private float player1Health = 100f;
+        private float player2Health = 100f;
+        private const float MAX_HEALTH = 100f;
 
         public override void Spawned()
         {
-            InitializeHUD();
+            // Initialize
+            if (leftHealthBar != null)
+                leftHealthBar.Initialize("Player 1", true);
 
-            if (enableDebugLogs)
-                Debug.Log("[GameHUD] HUD initialized and ready");
+            if (rightHealthBar != null)
+                rightHealthBar.Initialize("Player 2", false);
+
+            // Server sets initial values
+            if (HasStateAuthority)
+            {
+                TimeRemaining = 99f;
+                TimerActive = false;
+                CurrentRound = 1;
+            }
+
+            UpdateRoundDisplay();
         }
 
         public override void FixedUpdateNetwork()
         {
+            // Only server updates timer
             if (!HasStateAuthority) return;
 
-            // Update timer on server
-            if (NetworkedTimerActive && NetworkedTimeRemaining > 0)
+            if (TimerActive && TimeRemaining > 0)
             {
-                NetworkedTimeRemaining -= Runner.DeltaTime;
+                TimeRemaining -= Runner.DeltaTime;
 
-                if (NetworkedTimeRemaining <= 0)
+                if (TimeRemaining <= 0)
                 {
-                    NetworkedTimeRemaining = 0;
+                    TimeRemaining = 0;
+                    TimerActive = false;
                     OnTimeUp();
                 }
             }
@@ -78,259 +71,105 @@ namespace _GAME.Scripts.UI
         public override void Render()
         {
             UpdateTimerDisplay();
-            UpdateHealthBars();
         }
 
-        /// <summary>
-        /// Initialize HUD components and default values
-        /// </summary>
-        private void InitializeHUD()
+        // ==================== PUBLIC API ====================
+
+        public void StartTimer(float seconds = 99f)
         {
-            // Initialize health bars
-            if (leftHealthBar != null)
-            {
-                leftHealthBar.Initialize("Player 1", true); // Left side
-                leftHealthBar.SetHealth(100f, 100f);
-            }
+            if (!HasStateAuthority) return;
 
-            if (rightHealthBar != null)
-            {
-                rightHealthBar.Initialize("Player 2", false); // Right side
-                rightHealthBar.SetHealth(100f, 100f);
-            }
+            TimeRemaining = seconds;
+            TimerActive = true;
+        }
 
-            // Initialize timer
-            if (HasStateAuthority)
-            {
-                NetworkedTimeRemaining = 99f; // Default fight time
-                NetworkedCurrentRound = 1;
-                NetworkedTimerActive = false;
-            }
+        public void StopTimer()
+        {
+            if (!HasStateAuthority) return;
+            TimerActive = false;
+        }
 
+        public void SetPlayerHealth(int playerIndex, float health)
+        {
+            health = Mathf.Clamp(health, 0f, MAX_HEALTH);
+
+            if (playerIndex == 0)
+            {
+                player1Health = health;
+                if (leftHealthBar != null)
+                    leftHealthBar.SetHealth(health, MAX_HEALTH);
+            }
+            else if (playerIndex == 1)
+            {
+                player2Health = health;
+                if (rightHealthBar != null)
+                    rightHealthBar.SetHealth(health, MAX_HEALTH);
+            }
+        }
+
+        public void SetRound(int roundNumber)
+        {
+            if (!HasStateAuthority) return;
+
+            CurrentRound = roundNumber;
             UpdateRoundDisplay();
         }
 
-        /// <summary>
-        /// Set player references for health tracking
-        /// </summary>
-        public void SetPlayerReferences(PlayerController player1, PlayerController player2)
-        {
-            player1Controller = player1;
-            player2Controller = player2;
+        // ==================== INTERNAL METHODS ====================
 
-            if (enableDebugLogs)
-                Debug.Log("[GameHUD] Player references set");
-        }
-
-        /// <summary>
-        /// Start round timer
-        /// </summary>
-        public void StartRoundTimer(float roundTime = 99f)
-        {
-            if (!HasStateAuthority) return;
-
-            NetworkedTimeRemaining = roundTime;
-            NetworkedTimerActive = true;
-
-            if (enableDebugLogs)
-                Debug.Log($"[GameHUD] Round timer started: {roundTime} seconds");
-        }
-
-        /// <summary>
-        /// Stop round timer
-        /// </summary>
-        public void StopRoundTimer()
-        {
-            if (!HasStateAuthority) return;
-
-            NetworkedTimerActive = false;
-
-            if (enableDebugLogs)
-                Debug.Log("[GameHUD] Round timer stopped");
-        }
-
-        /// <summary>
-        /// Update player health display
-        /// </summary>
-        public void UpdatePlayerHealth(int playerIndex, float currentHealth, float maxHealth)
-        {
-            if (playerIndex == 0 && leftHealthBar != null)
-            {
-                if (enableHealthAnimation)
-                    AnimateHealthBar(leftHealthBar, currentHealth, maxHealth, ref leftHealthAnimCoroutine);
-                else
-                    leftHealthBar.SetHealth(currentHealth, maxHealth);
-            }
-            else if (playerIndex == 1 && rightHealthBar != null)
-            {
-                if (enableHealthAnimation)
-                    AnimateHealthBar(rightHealthBar, currentHealth, maxHealth, ref rightHealthAnimCoroutine);
-                else
-                    rightHealthBar.SetHealth(currentHealth, maxHealth);
-            }
-        }
-
-        /// <summary>
-        /// Update round information
-        /// </summary>
-        public void UpdateRound(int roundNumber, int player1Wins, int player2Wins)
-        {
-            if (!HasStateAuthority) return;
-
-            NetworkedCurrentRound = roundNumber;
-
-            // Update round indicators on all clients
-            RPC_UpdateRoundIndicators(player1Wins, player2Wins);
-        }
-
-        /// <summary>
-        /// Animate health bar changes smoothly
-        /// </summary>
-        private void AnimateHealthBar(HealthBarUI healthBar, float targetHealth, float maxHealth, ref Coroutine animCoroutine)
-        {
-            if (animCoroutine != null)
-                StopCoroutine(animCoroutine);
-
-            animCoroutine = StartCoroutine(AnimateHealthCoroutine(healthBar, targetHealth, maxHealth));
-        }
-
-        private IEnumerator AnimateHealthCoroutine(HealthBarUI healthBar, float targetHealth, float maxHealth)
-        {
-            float startHealth = healthBar.GetCurrentHealth();
-            float elapsed = 0f;
-            float animationDuration = Mathf.Abs(targetHealth - startHealth) / (maxHealth * healthAnimationSpeed);
-
-            while (elapsed < animationDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = elapsed / animationDuration;
-                float currentHealth = Mathf.Lerp(startHealth, targetHealth, t);
-
-                healthBar.SetHealth(currentHealth, maxHealth);
-                yield return null;
-            }
-
-            healthBar.SetHealth(targetHealth, maxHealth);
-        }
-
-        /// <summary>
-        /// Update timer display every frame
-        /// </summary>
         private void UpdateTimerDisplay()
         {
             if (timerText == null) return;
 
-            int minutes = Mathf.FloorToInt(NetworkedTimeRemaining / 60f);
-            int seconds = Mathf.FloorToInt(NetworkedTimeRemaining % 60f);
+            int minutes = Mathf.FloorToInt(TimeRemaining / 60f);
+            int seconds = Mathf.FloorToInt(TimeRemaining % 60f);
 
             timerText.text = $"{minutes:00}:{seconds:00}";
 
-            // Change color when time is running low
-            if (NetworkedTimeRemaining <= warningTimeThreshold)
-            {
-                timerText.color = warningTimerColor;
-                if (timerBackground != null)
-                    timerBackground.color = warningTimerColor;
-            }
+            // Red color when low time
+            if (TimeRemaining <= 10f)
+                timerText.color = Color.red;
             else
-            {
-                timerText.color = normalTimerColor;
-                if (timerBackground != null)
-                    timerBackground.color = normalTimerColor;
-            }
+                timerText.color = Color.white;
         }
 
-        /// <summary>
-        /// Update health bars from player controllers
-        /// </summary>
-        private void UpdateHealthBars()
-        {
-            // This will be connected to actual health systems later
-            // For now, we keep it ready for integration
-        }
-
-        /// <summary>
-        /// Update round display
-        /// </summary>
         private void UpdateRoundDisplay()
         {
             if (roundText != null)
-                roundText.text = $"ROUND {NetworkedCurrentRound}";
+                roundText.text = $"ROUND {CurrentRound}";
         }
 
-        /// <summary>
-        /// Called when timer reaches zero
-        /// </summary>
         private void OnTimeUp()
         {
-            NetworkedTimerActive = false;
-
-            if (enableDebugLogs)
-                Debug.Log("[GameHUD] Time's up!");
-
-            // Notify game manager about time up
-            // This will trigger timeout win condition logic
+            Debug.Log("[GameHUD] Time's up!");
+            // Game Manager will handle timeout logic
         }
 
-        /// <summary>
-        /// Network RPC to update round indicators on all clients
-        /// </summary>
-        [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-        private void RPC_UpdateRoundIndicators(int player1Wins, int player2Wins)
-        {
-            // Update player 1 round indicators
-            for (int i = 0; i < player1RoundIndicators.Length; i++)
-            {
-                if (player1RoundIndicators[i] != null)
-                    player1RoundIndicators[i].SetActive(i < player1Wins);
-            }
+        // ==================== GETTERS ====================
 
-            // Update player 2 round indicators
-            for (int i = 0; i < player2RoundIndicators.Length; i++)
-            {
-                if (player2RoundIndicators[i] != null)
-                    player2RoundIndicators[i].SetActive(i < player2Wins);
-            }
-
-            UpdateRoundDisplay();
-        }
-
-        // ==================== PUBLIC API FOR EXTERNAL SYSTEMS ====================
-
-        /// <summary>
-        /// Get remaining time (for external systems)
-        /// </summary>
-        public float GetRemainingTime() => NetworkedTimeRemaining;
-
-        /// <summary>
-        /// Check if timer is active
-        /// </summary>
-        public bool IsTimerActive() => NetworkedTimerActive;
-
-        /// <summary>
-        /// Get current round number
-        /// </summary>
-        public int GetCurrentRound() => NetworkedCurrentRound;
+        public float GetTimeRemaining() => TimeRemaining;
+        public bool IsTimerActive() => TimerActive;
+        public float GetPlayer1Health() => player1Health;
+        public float GetPlayer2Health() => player2Health;
 
         // ==================== EDITOR TESTING ====================
 
 #if UNITY_EDITOR
-        [Header("Editor Testing")]
-        [SerializeField] private bool testMode = false;
+        [Header("Testing")]
+        [SerializeField] private bool enableTesting = false;
 
         private void Update()
         {
-            if (!testMode || !Application.isPlaying) return;
+            if (!enableTesting || !Application.isPlaying) return;
 
-            // Test controls in editor
             if (Input.GetKeyDown(KeyCode.Alpha1))
-                UpdatePlayerHealth(0, Random.Range(0f, 100f), 100f);
-
+                SetPlayerHealth(0, Random.Range(0f, 100f));
             if (Input.GetKeyDown(KeyCode.Alpha2))
-                UpdatePlayerHealth(1, Random.Range(0f, 100f), 100f);
-
+                SetPlayerHealth(1, Random.Range(0f, 100f));
             if (Input.GetKeyDown(KeyCode.T))
-                StartRoundTimer(10f);
+                StartTimer(10f);
+            if (Input.GetKeyDown(KeyCode.S))
+                StopTimer();
         }
 #endif
     }
