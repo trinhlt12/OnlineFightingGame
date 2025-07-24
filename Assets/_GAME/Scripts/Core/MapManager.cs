@@ -134,6 +134,9 @@ public class MapManager : NetworkBehaviour
     /// <summary>
     /// Cleanup current map instance
     /// </summary>
+    /// <summary>
+    /// Cleanup current map instance
+    /// </summary>
     private void CleanupCurrentMap()
     {
         if (_currentMapInstance != null)
@@ -141,16 +144,43 @@ public class MapManager : NetworkBehaviour
             if (enableDebugLogs)
                 Debug.Log("[MapManager] Cleaning up previous map instance");
 
-            Destroy(_currentMapInstance);
+            // Check if we're in play mode or editor mode
+            if (Application.isPlaying)
+            {
+                Destroy(_currentMapInstance);
+            }
+            else
+            {
+                // In editor mode, use DestroyImmediate
+                DestroyImmediate(_currentMapInstance);
+            }
+
             _currentMapInstance = null;
         }
 
         // Also cleanup any remaining children in MapRoot
         if (mapRoot != null)
         {
-            foreach (Transform child in mapRoot)
+            // Convert to array to avoid modification during iteration
+            var childrenToDestroy = new Transform[mapRoot.childCount];
+            for (int i = 0; i < mapRoot.childCount; i++)
             {
-                Destroy(child.gameObject);
+                childrenToDestroy[i] = mapRoot.GetChild(i);
+            }
+
+            foreach (Transform child in childrenToDestroy)
+            {
+                if (child != null)
+                {
+                    if (Application.isPlaying)
+                    {
+                        Destroy(child.gameObject);
+                    }
+                    else
+                    {
+                        DestroyImmediate(child.gameObject);
+                    }
+                }
             }
         }
     }
@@ -184,7 +214,12 @@ public class MapManager : NetworkBehaviour
 
     private void OnDestroy()
     {
-        CleanupCurrentMap();
+        // Only cleanup if we're in play mode to avoid asset destruction warnings
+        if (Application.isPlaying)
+        {
+            CleanupCurrentMap();
+        }
+
         if (_instance == this)
             _instance = null;
     }
