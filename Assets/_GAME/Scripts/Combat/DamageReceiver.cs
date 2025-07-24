@@ -27,6 +27,35 @@ namespace _GAME.Scripts.Combat
         [Networked] public int     NetworkedHitstunFrames     { get; set; }
         [Networked] public Vector2 NetworkedKnockbackVelocity { get; set; }
         [Networked] public bool    IsInHitState               { get; set; }
+        [Header("Dash Invincibility")]
+        [SerializeField] private bool enableDashInvincibility = true;
+
+        // Network property for dash invincibility
+        [Networked] public bool IsDashInvincible { get; set; }
+
+        /// <summary>
+        /// Set dash invincibility state (called by DashState)
+        /// </summary>
+        public void SetDashInvincibility(bool isInvincible)
+        {
+            if (!HasStateAuthority) return;
+
+            IsDashInvincible = isInvincible;
+
+            if (enableDamageDebugLogs)
+            {
+                Debug.Log($"[DamageReceiver] Dash invincibility: {isInvincible}");
+            }
+        }
+        /// <summary>
+        /// Check if player is invincible (includes dash invincibility)
+        /// Modify existing TakeDamage() method to use this
+        /// </summary>
+        private bool IsPlayerInvincible()
+        {
+            return IsInvincible || (enableDashInvincibility && IsDashInvincible);
+        }
+
 
         // Network-synchronized properties
         [Networked] private float LastHitTime { get; set; }
@@ -84,10 +113,14 @@ namespace _GAME.Scripts.Combat
                 return false;
             }
 
-            // Check invincibility
-            if (IsInvincible)
+            // Check invincibility (includes dash invincibility)
+            if (IsPlayerInvincible())
             {
-                if (enableDamageDebugLogs) Debug.Log("[DamageReceiver] Damage blocked - player is invincible");
+                if (enableDamageDebugLogs)
+                {
+                    string reason = IsDashInvincible ? "dash invincible" : "regular invincible";
+                    Debug.Log($"[DamageReceiver] Damage blocked - player is {reason}");
+                }
                 return false;
             }
 

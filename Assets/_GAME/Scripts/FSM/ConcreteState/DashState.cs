@@ -59,7 +59,6 @@ namespace _GAME.Scripts.FSM.ConcreteState
         public override void ExitState()
         {
             base.ExitState();
-            var player = entity.GetComponent<PlayerController>();
         }
 
         /// <summary>
