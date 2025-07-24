@@ -108,8 +108,8 @@
     <Compile Include="Assets\_GAME\Scripts\FSM\IPredicate.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCFloatExtensions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Attributes\KCCLayerAtribute.cs" />
-    <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\ScriptableKCCProcessorProvider.cs" />
     <Compile Include="Assets\_GAME\Scripts\Combat\HitboxVisualizer.cs" />
+    <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\ScriptableKCCProcessorProvider.cs" />
     <Compile Include="Assets\_GAME\Scripts\UI\CharacterSelectionCanvas.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\IKCCProcessorProvider.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Interactions.cs" />
