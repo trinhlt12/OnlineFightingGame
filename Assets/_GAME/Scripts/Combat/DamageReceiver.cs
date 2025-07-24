@@ -181,7 +181,11 @@ namespace _GAME.Scripts.Combat
 
             // Interrupt any current attacks
             InterruptCurrentActions();
-
+            var hudIntegrator = FindObjectOfType<HUDIntegrator>();
+            if (hudIntegrator != null)
+            {
+                hudIntegrator.OnDamageReceived(this._playerController, damage);
+            }
             return true;
         }
 
