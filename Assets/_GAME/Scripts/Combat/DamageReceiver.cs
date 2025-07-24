@@ -5,6 +5,8 @@ using _GAME.Scripts.FSM.ConcreteState;
 
 namespace _GAME.Scripts.Combat
 {
+    using _GAME.Scripts.UI;
+
     /// <summary>
     /// Handles damage reception and triggers hit state transitions
     /// Network-synchronized component for consistent hit processing
@@ -181,12 +183,29 @@ namespace _GAME.Scripts.Combat
 
             // Interrupt any current attacks
             InterruptCurrentActions();
-            var hudIntegrator = FindObjectOfType<HUDIntegrator>();
-            if (hudIntegrator != null)
+
+            var gameHUD = FindObjectOfType<GameHUD>();
+            if (gameHUD != null)
             {
-                hudIntegrator.OnDamageReceived(this._playerController, damage);
+                // Simple player index detection
+                int playerIndex = DeterminePlayerIndex(this._playerController);
+                if (playerIndex >= 0)
+                {
+                    float currentHealth = 100f - damage; // Simple tracking
+                    gameHUD.SetPlayerHealth(playerIndex, currentHealth);
+                }
             }
             return true;
+        }
+
+        private int DeterminePlayerIndex(PlayerController player)
+        {
+            // Quick and dirty: use object name or InputAuthority
+            if (player.name.Contains("Player1") || player.Object.InputAuthority.PlayerId == 1)
+                return 0;
+            if (player.name.Contains("Player2") || player.Object.InputAuthority.PlayerId == 2)
+                return 1;
+            return -1;
         }
 
         /// <summary>
