@@ -23,7 +23,7 @@ MonoBehaviour:
   Damage: 10
   KnockbackForce: {x: 5, y: 2}
   HitstunFrames: 12
-  HitboxSize: {x: 2.5, y: 1}
+  HitboxSize: {x: 3, y: 1}
   HitboxOffset: {x: 0, y: 1}
   HitLayers:
     serializedVersion: 2

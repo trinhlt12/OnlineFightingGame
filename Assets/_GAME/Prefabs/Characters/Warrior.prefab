@@ -321,6 +321,7 @@ MonoBehaviour:
   enableAnimationLogs: 1
   enableCombatLogs: 0
   _rigidbody: {fileID: 3980058348389242511}
+  _collider: {fileID: 0}
   _stateMachine: {fileID: 7085809471747427103}
   _IsGrounded: 0
   _IsFacingRight: 1
@@ -398,9 +399,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   damageReduction: 0
   knockbackResistance: 0
-  invincibilityFramesAfterHit: 0.5
+  invincibilityFramesAfterHit: 0.1
   enableDamageDebugLogs: 0
   _NetworkedHitStartTick: 0
   _NetworkedHitstunFrames: 0
   _NetworkedKnockbackVelocity: {x: 0, y: 0}
   _IsInHitState: 0
+  enableDashInvincibility: 1
+  _IsDashInvincible: 0

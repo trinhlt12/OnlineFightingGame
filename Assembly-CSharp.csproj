@@ -50,6 +50,7 @@
     <Compile Include="Assets\_GAME\Scripts\CharacterSelection\CharacterSelectionPlayer.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Stages\PrepareData.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\NetworkKCCProcessorProvider.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Combat\HealthSystem.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\KCCProcessor.cs" />
     <Compile Include="Assets\_GAME\Scripts\MenuImplementation\MenuConnectionBehaviour.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkQuaternion.cs" />
@@ -123,7 +124,6 @@
     <Compile Include="Assets\_GAME\Scripts\MenuImplementation\MenuUIController.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\GenericKCCProcessorProvider.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\KCCTimer.cs" />
-    <Compile Include="Assets\_GAME\Scripts\Combat\HUDIntegrator.cs" />
     <Compile Include="Assets\_GAME\Scripts\UI\UIManager.cs" />
     <Compile Include="Assets\_GAME\Scripts\Singleton.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\KCCProcessorProvider.cs" />
