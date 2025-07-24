@@ -6,6 +6,8 @@ using _GAME.Scripts.CharacterSelection;
 
 namespace UI
 {
+    using _GAME.Scripts.Core;
+
     public class MapSelectionCanvas : UICanvas
     {
         [Header("UI References")]
@@ -150,6 +152,12 @@ namespace UI
             else
             {
                 Debug.LogError("[MapSelectionCanvas] CharacterSelectionState.Instance not found! Cannot synchronize game transition.");
+            }
+
+            var gameManager = FindObjectOfType<GameManager>();
+            if (gameManager != null)
+            {
+                gameManager.StartGameFromUI();
             }
         }
 

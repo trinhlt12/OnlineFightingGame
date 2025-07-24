@@ -35,6 +35,7 @@ namespace _GAME.Scripts.Core
         // Game States
         public enum GameState
         {
+            WaitingToStart,
             Countdown,
             Fighting,
             RoundEnd,
@@ -55,10 +56,11 @@ namespace _GAME.Scripts.Core
                 player2 = players[1];
             }
 
-            // Server initializes game
+            // Server waits for manual start - KHÔNG AUTO START
             if (HasStateAuthority)
             {
-                StartNewGame();
+                CurrentState   = GameState.WaitingToStart;
+                GameplayFrozen = true;
             }
         }
 
@@ -68,7 +70,12 @@ namespace _GAME.Scripts.Core
 
             switch (CurrentState)
             {
-                case GameState.Countdown: UpdateCountdown(); break;
+                case GameState.WaitingToStart:
+                    // Do nothing, wait for manual start
+                    break;
+                case GameState.Countdown:
+                    UpdateCountdown();
+                    break;
                 case GameState.Fighting:
                     UpdateFighting();
                     CheckBoundaries();
@@ -185,7 +192,25 @@ namespace _GAME.Scripts.Core
         }
 
         // ==================== UTILITY ====================
+        /// <summary>
+        /// Start game manually - called by Start button
+        /// </summary>
+        [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+        public void RPC_StartGame()
+        {
+            if (CurrentState != GameState.WaitingToStart) return;
 
+            Debug.Log("[GameManager] Manual game start triggered!");
+            StartNewGame();
+        }
+
+        /// <summary>
+        /// Public method for UI to call
+        /// </summary>
+        public void StartGameFromUI()
+        {
+            RPC_StartGame();
+        }
         private bool ShouldEndGame()
         {
             // Win conditions: 2-0 or 2-1
