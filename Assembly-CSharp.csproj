@@ -94,6 +94,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCCCollider.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkVector4.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCArrayExtensions.cs" />
+    <Compile Include="Assets\_GAME\Scripts\UI\GameHUD.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Properties.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Attributes\DisabledInPlayModeAttribute.cs" />
     <Compile Include="Assets\_GAME\Scripts\Camera\CameraFollow.cs" />
@@ -152,6 +153,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Attributes\KCCProcessorReferenceAtribute.cs" />
     <Compile Include="Assets\_GAME\Scripts\AudioListenerCleaner.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Accumulators\FloatAccumulator.cs" />
+    <Compile Include="Assets\_GAME\Scripts\UI\HealthBarUI.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Depenetration.cs" />
     <Compile Include="Assets\_GAME\Scripts\CharacterSelectionButton.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCTraceInfo.cs" />
