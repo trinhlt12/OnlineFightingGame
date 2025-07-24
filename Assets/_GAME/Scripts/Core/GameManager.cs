@@ -21,6 +21,7 @@ namespace _GAME.Scripts.Core
         [SerializeField]                        private HealthSystem    healthSystem;
         [SerializeField]                        private CountdownUI     countdownUI;
         [SerializeField]                        private RoundProgressUI roundProgressUI;
+        [SerializeField]                        private WinLoseUI       winLoseUI;
 
         // Network Properties
         [Networked] public  GameState CurrentState       { get; set; }
@@ -51,6 +52,7 @@ namespace _GAME.Scripts.Core
             if (gameHUD == null) gameHUD                 = FindObjectOfType<GameHUD>();
             if (healthSystem == null) healthSystem       = FindObjectOfType<HealthSystem>();
             if (roundProgressUI == null) roundProgressUI = FindObjectOfType<RoundProgressUI>();
+            if (winLoseUI == null) winLoseUI             = FindObjectOfType<WinLoseUI>();
 
             // Find players
             var players = FindObjectsOfType<PlayerController>();
@@ -101,7 +103,13 @@ namespace _GAME.Scripts.Core
             Player1Wins  = 0;
             Player2Wins  = 0;
 
-            // RESET ROUND PROGRESS UI
+            // Hide win/lose panels
+            if (winLoseUI != null)
+            {
+                winLoseUI.RPC_HideAllPanels();
+            }
+
+            // Reset round progress UI
             if (roundProgressUI != null)
             {
                 roundProgressUI.RPC_ResetAllProgress();
@@ -257,6 +265,46 @@ namespace _GAME.Scripts.Core
             string finalResult = Player1Wins > Player2Wins ? "Player 1 Wins the Match!" : "Player 2 Wins the Match!";
 
             Debug.Log($"[GameManager] Game Over! {finalResult} ({Player1Wins}-{Player2Wins})");
+
+            // DIRECT RPC calls
+            if (winLoseUI != null)
+            {
+                if (Player1Wins > Player2Wins)
+                {
+                    winLoseUI.RPC_ShowWinForPlayer1();
+                }
+                else
+                {
+                    winLoseUI.RPC_ShowWinForPlayer2();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Show win/lose result to all clients based on their player index
+        /// </summary>
+        private void ShowWinLoseToAllClients(int winnerPlayerIndex)
+        {
+            // Get all players to determine their indices
+            var allPlayers = FindObjectsOfType<PlayerController>();
+
+            foreach (var player in allPlayers)
+            {
+                if (player.Object.InputAuthority != PlayerRef.None)
+                {
+                    int playerIndex = GetPlayerIndexFromAuthority(player.Object.InputAuthority);
+                    winLoseUI.RPC_ShowResult(playerIndex, winnerPlayerIndex - 1);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get player index from InputAuthority - Game Jam Helper
+        /// </summary>
+        private int GetPlayerIndexFromAuthority(PlayerRef authority)
+        {
+            // Simple mapping: PlayerId 1 = Player Index 0, PlayerId 2 = Player Index 1
+            return authority.PlayerId - 1;
         }
 
         private void ResetPlayersForNewRound()

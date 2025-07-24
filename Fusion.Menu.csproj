@@ -48,21 +48,21 @@
     <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuUIScenes.cs" />
     <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuImageFitter.cs" />
     <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuScreenPluginTooltip.cs" />
+    <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenu.Common.cs" />
+    <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuFpsAvgCounter.cs" />
+    <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuUIParty.cs" />
+    <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuUIMain.cs" />
+    <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuConfig.cs" />
     <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuScreenPlugin.cs" />
     <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenu.Sdk.cs" />
     <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuUIGameplay.cs" />
-    <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenu.Common.cs" />
-    <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuFpsAvgCounter.cs" />
     <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuScreenPluginVersion.cs" />
-    <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuUIParty.cs" />
     <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuPartyCodeGenerator.cs" />
     <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuUILoading.cs" />
     <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuUISettings.cs" />
     <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuUIPopup.cs" />
-    <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuUIMain.cs" />
     <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuScreenPluginPing.cs" />
     <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuMachineId.cs" />
-    <Compile Include="Assets\Photon\FusionMenu\Runtime\FusionMenuConfig.cs" />
     <None Include="Assets\Photon\FusionMenu\Runtime\Fusion.Menu.asmdef" />
     <Reference Include="UnityEngine">
       <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.19f1\Editor\Data\Managed\UnityEngine\UnityEngine.dll</HintPath>

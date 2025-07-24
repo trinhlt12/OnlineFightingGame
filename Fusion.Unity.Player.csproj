@@ -45,24 +45,24 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\2022.3.19f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Photon\Fusion\Runtime\Utilities\RunnerVisibility\EnableOnSingleRunner.cs" />
-    <Compile Include="Assets\Photon\Fusion\Runtime\Utilities\RunnerVisibility\RunnerVisibilityLink.cs" />
-    <Compile Include="Assets\Photon\Fusion\Runtime\FusionStatsObjectIds.cs" />
     <Compile Include="Assets\Photon\Fusion\Runtime\Utilities\RunnerVisibility\RunnerVisibilityLinksRoot.cs" />
-    <Compile Include="Assets\Photon\Fusion\Runtime\Utilities\RunnerVisibility\RunnerEnableVisibility.cs" />
-    <Compile Include="Assets\Photon\Fusion\Runtime\FusionAddressablePrefabsPreloader.cs" />
     <Compile Include="Assets\Photon\Fusion\Runtime\FusionBootstrap.cs" />
-    <Compile Include="Assets\Photon\Fusion\Runtime\Fusion.Unity.cs" />
     <Compile Include="Assets\Photon\Fusion\Runtime\Utilities\RunnerVisibility\RunnerLagCompensationGizmos.cs" />
-    <Compile Include="Assets\Photon\Fusion\Runtime\FusionStats.cs" />
-    <Compile Include="Assets\Photon\Fusion\Runtime\FusionStatsGraph.cs" />
     <Compile Include="Assets\Photon\Fusion\Runtime\FusionStatsMeterBar.cs" />
-    <Compile Include="Assets\Photon\Fusion\Runtime\NetworkSceneManagerDefault.cs" />
     <Compile Include="Assets\Photon\Fusion\Runtime\FusionStatsBillboard.cs" />
-    <Compile Include="Assets\Photon\Fusion\Runtime\FusionBootstrapDebugGUI.cs" />
     <Compile Include="Assets\Photon\Fusion\Runtime\NetworkObjectProviderDefault.cs" />
     <Compile Include="Assets\Photon\Fusion\Runtime\Utilities\RunnerVisibility\RunnerAOIGizmos.cs" />
     <Compile Include="Assets\Photon\Fusion\Runtime\NetworkCharacterController.cs" />
+    <Compile Include="Assets\Photon\Fusion\Runtime\Utilities\RunnerVisibility\EnableOnSingleRunner.cs" />
+    <Compile Include="Assets\Photon\Fusion\Runtime\Utilities\RunnerVisibility\RunnerVisibilityLink.cs" />
+    <Compile Include="Assets\Photon\Fusion\Runtime\FusionStatsObjectIds.cs" />
+    <Compile Include="Assets\Photon\Fusion\Runtime\Utilities\RunnerVisibility\RunnerEnableVisibility.cs" />
+    <Compile Include="Assets\Photon\Fusion\Runtime\FusionAddressablePrefabsPreloader.cs" />
+    <Compile Include="Assets\Photon\Fusion\Runtime\Fusion.Unity.cs" />
+    <Compile Include="Assets\Photon\Fusion\Runtime\FusionStats.cs" />
+    <Compile Include="Assets\Photon\Fusion\Runtime\FusionStatsGraph.cs" />
+    <Compile Include="Assets\Photon\Fusion\Runtime\NetworkSceneManagerDefault.cs" />
+    <Compile Include="Assets\Photon\Fusion\Runtime\FusionBootstrapDebugGUI.cs" />
     <Reference Include="UnityEngine">
       <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.19f1\Editor\Data\PlaybackEngines\WindowsStandaloneSupport\Variations\mono\Managed\UnityEngine.dll</HintPath>
     </Reference>

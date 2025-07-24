@@ -48,8 +48,8 @@
     <Compile Include="Assets\Photon\Fusion\Editor\FusionEditorSkin.cs" />
     <Compile Include="Assets\Photon\Fusion\Editor\FusionRunnerVisibilityControlsWindow.cs" />
     <Compile Include="Assets\Photon\Fusion\Editor\FusionHubWindow.cs" />
-    <Compile Include="Assets\Photon\Fusion\Editor\Fusion.Unity.Editor.cs" />
     <Compile Include="Assets\Photon\Fusion\Editor\NetworkProjectConfigImporterEditor.cs" />
+    <Compile Include="Assets\Photon\Fusion\Editor\Fusion.Unity.Editor.cs" />
     <Compile Include="Assets\Photon\Fusion\Editor\NetworkProjectConfigImporter.cs" />
     <None Include="Assets\Photon\Fusion\Editor\EditorResources\Fusion.Unity.xml" />
     <None Include="Assets\Photon\Fusion\Editor\EditorResources\Fonts\OFL.txt" />
