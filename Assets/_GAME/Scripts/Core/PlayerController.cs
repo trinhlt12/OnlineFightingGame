@@ -227,6 +227,12 @@ namespace _GAME.Scripts.Core
             _stateMachine.InitializeStateMachine(idleState);
         }
 
+        private bool IsGameplayFrozen()
+        {
+            var gameManager = FindObjectOfType<GameManager>();
+            return gameManager != null && gameManager.IsGameplayFrozen();
+        }
+
         public HitState GetHitState()
         {
             return _hitState;
@@ -324,6 +330,8 @@ namespace _GAME.Scripts.Core
 
         public override void FixedUpdateNetwork()
         {
+            if (IsGameplayFrozen()) return;
+
             // Reset input consumption flags at start of each tick
             ResetInputConsumption();
 
