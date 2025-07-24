@@ -121,7 +121,91 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: Dashing_KG_1_0
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 0
+        width: 50
+        height: 54
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dfda31ab3e2fc5a43ac51a82235b7ee5
+      internalID: 1333098031
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dashing_KG_1_1
+      rect:
+        serializedVersion: 2
+        x: 120
+        y: 0
+        width: 49
+        height: 53
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: df7dddc3453beb84588f277ebda3faf7
+      internalID: -1722614681
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dashing_KG_1_2
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 0
+        width: 59
+        height: 58
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cb327989cbed0db4ba5f251b272138e8
+      internalID: -590634771
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dashing_KG_1_3
+      rect:
+        serializedVersion: 2
+        x: 310
+        y: 0
+        width: 59
+        height: 56
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5bbb8c30020527e4dac7dfbdbf276ad6
+      internalID: -225543605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -132,7 +216,11 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Dashing_KG_1_0: 1333098031
+      Dashing_KG_1_1: -1722614681
+      Dashing_KG_1_2: -590634771
+      Dashing_KG_1_3: -225543605
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

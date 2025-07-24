@@ -85,6 +85,7 @@
     <Compile Include="Assets\_GAME\Scripts\UI\MapSelectionCanvas.cs" />
     <Compile Include="Assets\_GAME\Scripts\Core\PlayerController.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCTypesExtensions.cs" />
+    <Compile Include="Assets\_GAME\Scripts\FSM\ConcreteState\DashState.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkFloatArray.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\KCCRecorder.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkBool.cs" />

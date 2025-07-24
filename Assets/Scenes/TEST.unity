@@ -346,6 +346,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdd62bd8d417b5a45b89986a068d0118, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  followSpeed: 5
+  lookAheadDistance: 2
+  lookAheadSpeed: 3
+  useBounds: 1
+  minBounds: {x: -10, y: -5}
+  maxBounds: {x: 10, y: 5}
+  enableVerticalFollow: 1
+  verticalOffset: 0
+  verticalFollowSpeed: 3
+  enableDebugLogs: 0
 --- !u!1 &666397577
 GameObject:
   m_ObjectHideFlags: 0

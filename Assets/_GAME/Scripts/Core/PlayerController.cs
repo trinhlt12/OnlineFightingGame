@@ -47,18 +47,43 @@ namespace _GAME.Scripts.Core
         private bool             _attackInputConsumedThisFrame = false;
 
         // ==================== PROPERTIES ====================
-        public Rigidbody2D Rigidbody          => _rigidbody;
-        public Animator    Animator           => animator;
-        public bool        HasMoveInput       => _inputEnabled && Mathf.Abs(CurrentMoveInput) > 0.1f;
-        public bool        CurrentFacingRight => IsFacingRight;
-        public bool        CanJump            => JumpsUsed < MAX_JUMPS;
+        public                                             Rigidbody2D Rigidbody          => _rigidbody;
+        public                                             Animator    Animator           => animator;
+        public                                             bool        HasMoveInput       => _inputEnabled && Mathf.Abs(CurrentMoveInput) > 0.1f;
+        public                                             bool        CurrentFacingRight => IsFacingRight;
+        public                                             bool        CanJump            => JumpsUsed < MAX_JUMPS;
+        [Header("Dash Settings")] [SerializeField] private float       dashDistance     = 5f;
+        [SerializeField]                           private float       dashCooldown     = 2f;
+        private const                                      int         MAX_DASH_CHARGES = 3;
+
+        // Network Properties for Dash (add to existing network properties section)
+        [Networked] public int    DashCharges       { get; private set; } = MAX_DASH_CHARGES;
+        [Networked] public float  DashCooldownTimer { get; private set; }
+        [Networked] public string PreviousStateName { get; private set; } = "";
+
+        // Input Properties for Dash (add to existing input properties section)
+        public bool WasDashPressedThisFrame
+        {
+            get
+            {
+                if (!_inputEnabled) return false;
+                bool pressed = _currentFrameInput.buttons.IsPressed(NetworkButtons.Dodge) && !_currentFrameInput.previousButtons.IsPressed(NetworkButtons.Dodge);
+                return pressed && !_dashInputConsumedThisFrame;
+            }
+        }
+
+        private bool _dashInputConsumedThisFrame = false;
+
+        // Dash Properties (add to existing properties section)
+        public bool CanDash => DashCharges > 0 && DashCooldownTimer <= 0;
 
         // INPUT PROPERTIES - Single source of truth
         public bool WasJumpPressedThisFrame
         {
             get
             {
-                return _inputEnabled &&_currentFrameInput.WasPressedThisFrame(NetworkButtons.Jump)
+                return _inputEnabled
+                    && _currentFrameInput.WasPressedThisFrame(NetworkButtons.Jump)
                     && !_jumpInputConsumedThisFrame;
             }
         }
@@ -67,7 +92,8 @@ namespace _GAME.Scripts.Core
         {
             get
             {
-                return _inputEnabled &&_currentFrameInput.WasAttackPressedThisFrame()
+                return _inputEnabled
+                    && _currentFrameInput.WasAttackPressedThisFrame()
                     && !_attackInputConsumedThisFrame;
             }
         }
@@ -111,6 +137,7 @@ namespace _GAME.Scripts.Core
                 Debug.LogWarning($"[PlayerController] No ComboController found on {gameObject.name}. Combat will be disabled.");
             }
         }
+
         private HitState _hitState;
 
         private void InitializeStateMachine()
@@ -120,6 +147,7 @@ namespace _GAME.Scripts.Core
             var jumpState   = new JumpState(this);
             var attackState = new AttackState(this);
             var hitState    = new HitState(this);
+            var dashState   = new DashState(this);
 
             _hitState = hitState;
 
@@ -129,6 +157,22 @@ namespace _GAME.Scripts.Core
             _stateMachine.RegisterState(jumpState);
             _stateMachine.RegisterState(attackState);
             _stateMachine.RegisterState(hitState);
+            _stateMachine.RegisterState(dashState);
+
+            _stateMachine.AddTransition(idleState, dashState,
+                new FuncPredicate(() => WasDashPressedThisFrame && CanDash));
+            _stateMachine.AddTransition(moveState, dashState,
+                new FuncPredicate(() => WasDashPressedThisFrame && CanDash));
+            _stateMachine.AddTransition(jumpState, dashState,
+                new FuncPredicate(() => WasDashPressedThisFrame && CanDash));
+
+            // Dash completion transitions
+            _stateMachine.AddTransition(dashState, idleState,
+                new FuncPredicate(() => dashState.IsDashComplete() && IsGrounded && !HasMoveInput));
+            _stateMachine.AddTransition(dashState, moveState,
+                new FuncPredicate(() => dashState.IsDashComplete() && IsGrounded && HasMoveInput));
+            _stateMachine.AddTransition(dashState, jumpState,
+                new FuncPredicate(() => dashState.IsDashComplete() && !IsGrounded));
 
             /*_stateMachine.AddAnyTransition(hitState,
                 new FuncPredicate(() => ShouldEnterHitState()));*/
@@ -174,11 +218,14 @@ namespace _GAME.Scripts.Core
 
             _stateMachine.InitializeStateMachine(idleState);
         }
+
         public HitState GetHitState()
         {
             return _hitState;
         }
+
         private bool _inputEnabled = true;
+
         public void SetInputEnabled(bool enabled)
         {
             _inputEnabled = enabled;
@@ -195,6 +242,73 @@ namespace _GAME.Scripts.Core
             if (FindObjectOfType<InputManager>() == null)
             {
                 new GameObject("InputManager").AddComponent<InputManager>();
+            }
+        }
+        // ==================== DASH METHODS ====================
+
+        /// <summary>
+        /// Perform dash movement
+        /// </summary>
+        public void PerformDash()
+        {
+            if (!HasStateAuthority || !CanDash) return;
+
+            // Calculate dash direction
+            float direction = IsFacingRight ? 1f : -1f;
+
+            // Apply dash movement
+            var velocity = _rigidbody.velocity;
+            velocity.x          = direction * dashDistance / 0.2f; // Dash distance over dash duration
+            _rigidbody.velocity = velocity;
+
+            // Consume dash charge
+            DashCharges--;
+            _dashInputConsumedThisFrame = true;
+
+            // Start cooldown if no charges left
+            if (DashCharges <= 0)
+            {
+                DashCooldownTimer = dashCooldown;
+            }
+        }
+
+        /// <summary>
+        /// Check if previous state was jump state
+        /// </summary>
+        public bool WasPreviousStateJump()
+        {
+            return PreviousStateName == "JumpState";
+        }
+
+        // ==================== DASH COOLDOWN UPDATE ====================
+        // Add this to existing UpdatePhysics() method or FixedUpdateNetwork()
+
+        private void UpdateDashCooldown()
+        {
+            if (!HasStateAuthority) return;
+
+            if (DashCooldownTimer > 0)
+            {
+                DashCooldownTimer -= Runner.DeltaTime;
+
+                if (DashCooldownTimer <= 0)
+                {
+                    DashCooldownTimer = 0;
+                    DashCharges       = MAX_DASH_CHARGES; // Reset all charges
+                }
+            }
+        }
+
+        // ==================== INPUT CONSUMPTION RESET ====================
+        // Add _dashInputConsumedThisFrame = false; to existing ResetInputConsumption() method
+
+        // ==================== PREVIOUS STATE TRACKING ====================
+        // Add this method to be called when changing states
+        public void SetPreviousState(string stateName)
+        {
+            if (HasStateAuthority)
+            {
+                PreviousStateName = stateName;
             }
         }
 
@@ -227,6 +341,7 @@ namespace _GAME.Scripts.Core
 
         private void ResetInputConsumption()
         {
+            _dashInputConsumedThisFrame   = false;
             _jumpInputConsumedThisFrame   = false;
             _attackInputConsumedThisFrame = false;
         }
@@ -235,6 +350,7 @@ namespace _GAME.Scripts.Core
         {
             CheckGround();
             UpdateJumpReset();
+            UpdateDashCooldown();
         }
 
         private void UpdateVisualDirection()
@@ -313,7 +429,6 @@ namespace _GAME.Scripts.Core
             JumpsUsed++;
 
             IsGrounded = false;
-
 
             ConsumeJumpInput();
 

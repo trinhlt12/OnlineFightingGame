@@ -326,6 +326,11 @@ MonoBehaviour:
   _IsFacingRight: 1
   _CurrentMoveInput: 0
   _JumpsUsed: 0
+  dashDistance: 5
+  dashCooldown: 2
+  _DashCharges: 3
+  _DashCooldownTimer: 0
+  _PreviousStateName: 
 --- !u!114 &7085809471747427103
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -395,3 +400,7 @@ MonoBehaviour:
   knockbackResistance: 0
   invincibilityFramesAfterHit: 0.5
   enableDamageDebugLogs: 0
+  _NetworkedHitStartTick: 0
+  _NetworkedHitstunFrames: 0
+  _NetworkedKnockbackVelocity: {x: 0, y: 0}
+  _IsInHitState: 0
