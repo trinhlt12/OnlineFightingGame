@@ -58,6 +58,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\NetworkTRSPProcessorProvider.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.RPCs.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.Debug.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Core\MapManager.cs" />
     <Compile Include="Assets\_GAME\Scripts\UI\MapSelectionCanvas.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkFloatArray.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.cs" />
@@ -187,6 +188,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCShapeCastHit.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\SmoothValues\SmoothVector3.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\PlayerRecorder.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Data\MapData.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Accumulators\Vector3Accumulator.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkFloat.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\SmoothValues\SmoothFloat.cs" />

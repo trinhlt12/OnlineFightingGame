@@ -10,17 +10,18 @@ namespace UI
 
     public class MapSelectionCanvas : UICanvas
     {
-        [Header("UI References")]
-        [SerializeField] private Button startButton;
-        [SerializeField] private Button backButton;
-        [SerializeField] private TextMeshProUGUI titleText;
-        [SerializeField] private TextMeshProUGUI statusText;
+        [Header("UI References")] [SerializeField] private Button          startButton;
+        [SerializeField]                           private Button          backButton;
+        [SerializeField]                           private TextMeshProUGUI titleText;
+        [SerializeField]                           private TextMeshProUGUI statusText;
 
-        [Header("Debug")]
-        [SerializeField] private bool enableDebugLogs = true;
+        [SerializeField] private Image           mapPreviewImage;
+        [SerializeField] private TextMeshProUGUI mapNameText;
+
+        [Header("Debug")] [SerializeField] private bool enableDebugLogs = true;
 
         private NetworkRunner _runner;
-        private bool _isInitialized = false;
+        private bool          _isInitialized = false;
 
         private void Awake()
         {
@@ -37,11 +38,9 @@ namespace UI
             }
 
             // Set default texts
-            if (titleText != null)
-                titleText.text = "Map Selection";
+            if (titleText != null) titleText.text = "Map Selection";
 
-            if (statusText != null)
-                statusText.text = "Loading...";
+            if (statusText != null) statusText.text = "Loading...";
 
             // Register this UI with UIManager for proper management
             // Note: This is important for UI loaded from Resources to be properly tracked
@@ -61,8 +60,7 @@ namespace UI
             if (UIManager.Instance != null)
             {
                 UIManager.Instance.RegisterExistingUI(this);
-                if (enableDebugLogs)
-                    Debug.Log("[MapSelectionCanvas] Successfully registered with UIManager");
+                if (enableDebugLogs) Debug.Log("[MapSelectionCanvas] Successfully registered with UIManager");
             }
             else
             {
@@ -74,14 +72,14 @@ namespace UI
         {
             base.Show();
 
-            if (enableDebugLogs)
-                Debug.Log("[MapSelectionCanvas] Showing Map Selection Canvas");
+            if (enableDebugLogs) Debug.Log("[MapSelectionCanvas] Showing Map Selection Canvas");
 
             // Initialize when shown
             if (!_isInitialized)
             {
                 Initialize();
             }
+            RandomSelectMap();
 
             UpdateUI();
         }
@@ -99,8 +97,7 @@ namespace UI
 
             _isInitialized = true;
 
-            if (enableDebugLogs)
-                Debug.Log("[MapSelectionCanvas] Initialized successfully");
+            if (enableDebugLogs) Debug.Log("[MapSelectionCanvas] Initialized successfully");
         }
 
         private void UpdateUI()
@@ -128,8 +125,7 @@ namespace UI
                 }
             }
 
-            if (enableDebugLogs)
-                Debug.Log($"[MapSelectionCanvas] UI Updated - IsServer: {_runner.IsServer}");
+            if (enableDebugLogs) Debug.Log($"[MapSelectionCanvas] UI Updated - IsServer: {_runner.IsServer}");
         }
 
         private void OnStartButtonClicked()
@@ -140,8 +136,7 @@ namespace UI
                 return;
             }
 
-            if (enableDebugLogs)
-                Debug.Log("[MapSelectionCanvas] Start button clicked - requesting game transition through CharacterSelectionState");
+            if (enableDebugLogs) Debug.Log("[MapSelectionCanvas] Start button clicked - requesting game transition through CharacterSelectionState");
 
             // Instead of calling GameStateManager directly, use the networked state manager
             // This ensures the transition is synchronized across all clients
@@ -163,8 +158,7 @@ namespace UI
 
         private void OnBackButtonClicked()
         {
-            if (enableDebugLogs)
-                Debug.Log("[MapSelectionCanvas] Back button clicked");
+            if (enableDebugLogs) Debug.Log("[MapSelectionCanvas] Back button clicked");
 
             // TODO: Implement back to character selection logic
             // This might require resetting game state and going back
@@ -175,8 +169,7 @@ namespace UI
         // This will be expanded later when full map selection is implemented
         public void OnMapSelected(int mapIndex)
         {
-            if (enableDebugLogs)
-                Debug.Log($"[MapSelectionCanvas] Map selected: {mapIndex}");
+            if (enableDebugLogs) Debug.Log($"[MapSelectionCanvas] Map selected: {mapIndex}");
 
             // TODO: Implement map selection logic
             // - Send RPC to all clients about selected map
@@ -187,8 +180,7 @@ namespace UI
         // Method to handle when all players are ready for game start
         public void OnAllPlayersReady()
         {
-            if (enableDebugLogs)
-                Debug.Log("[MapSelectionCanvas] All players ready for game start");
+            if (enableDebugLogs) Debug.Log("[MapSelectionCanvas] All players ready for game start");
 
             UpdateUI();
         }
@@ -196,11 +188,9 @@ namespace UI
         private void OnDestroy()
         {
             // Clean up button listeners
-            if (startButton != null)
-                startButton.onClick.RemoveListener(OnStartButtonClicked);
+            if (startButton != null) startButton.onClick.RemoveListener(OnStartButtonClicked);
 
-            if (backButton != null)
-                backButton.onClick.RemoveListener(OnBackButtonClicked);
+            if (backButton != null) backButton.onClick.RemoveListener(OnBackButtonClicked);
         }
 
         // Debug method to test the canvas
@@ -209,6 +199,62 @@ namespace UI
         {
             Debug.Log("[MapSelectionCanvas] Testing canvas functionality");
             UpdateUI();
+        }
+
+        private void RandomSelectMap()
+        {
+            if (_runner == null || !_runner.IsServer) return;
+
+            var mapManager = MapManager.Instance;
+            if (mapManager != null)
+            {
+                mapManager.RandomSelectAndSpawnMap();
+                StartCoroutine(UpdateMapDisplayAfterSpawn());
+            }
+            else
+            {
+                Debug.LogError("[MapSelectionCanvas] MapManager not found!");
+            }
+        }
+
+        private System.Collections.IEnumerator UpdateMapDisplayAfterSpawn()
+        {
+            // Wait a frame to ensure map is spawned
+            yield return null;
+
+            // Update UI display
+            UpdateMapDisplay();
+
+            // Verify map is ready
+            var mapManager = MapManager.Instance;
+            if (mapManager != null && mapManager.IsMapReady())
+            {
+                if (enableDebugLogs) Debug.Log("[MapSelectionCanvas] Map spawned and UI updated successfully");
+            }
+        }
+
+        private void UpdateMapDisplay()
+        {
+            var mapManager = MapManager.Instance;
+            if (mapManager == null) return;
+
+            var currentMapData = mapManager.CurrentMapData;
+            if (currentMapData == null) return;
+
+            // Update map preview image
+            if (mapPreviewImage != null && currentMapData.mapPreviewImage != null)
+            {
+                mapPreviewImage.sprite = currentMapData.mapPreviewImage;
+                mapPreviewImage.gameObject.SetActive(true);
+            }
+
+            // Update map name text
+            if (mapNameText != null)
+            {
+                mapNameText.text = currentMapData.mapName;
+            }
+
+            if (enableDebugLogs) Debug.Log($"[MapSelectionCanvas] Updated display for map: {currentMapData.mapName}");
         }
     }
 }

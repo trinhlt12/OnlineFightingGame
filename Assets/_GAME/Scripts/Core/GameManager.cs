@@ -5,6 +5,7 @@ using _GAME.Scripts.Combat;
 
 namespace _GAME.Scripts.Core
 {
+    using _GAME.Scripts.Camera;
     using _GAME.Scripts.FSM;
 
     public class GameManager : NetworkBehaviour
@@ -13,9 +14,12 @@ namespace _GAME.Scripts.Core
         [SerializeField]                            private int   maxRounds         = 3;
         [SerializeField]                            private float countdownDuration = 3f;
 
-        [Header("Map Boundaries")] [SerializeField] private float leftBoundary   = -10f;
-        [SerializeField]                            private float rightBoundary  = 10f;
-        [SerializeField]                            private float bottomBoundary = -5f;
+        [Networked] public float LeftBoundary { get;   set; } = -10f;
+        [Networked] public float RightBoundary  { get; set; } = 10f;
+        [Networked] public float BottomBoundary { get; set; } = -5f;
+
+        private CameraFollow _cameraFollow;
+
 
         [Header("References")] [SerializeField] private GameHUD         gameHUD;
         [SerializeField]                        private HealthSystem    healthSystem;
@@ -69,7 +73,52 @@ namespace _GAME.Scripts.Core
                 GameplayFrozen = true;
             }
         }
+        /// <summary>
+        /// Finds the map background and dynamically sets the game boundaries based on its size.
+        /// Also updates the camera bounds. This should only be run on the State Authority.
+        /// </summary>
+        private void UpdateBoundariesFromBackground()
+        {
+            if (!HasStateAuthority) return;
 
+            GameObject backgroundObject = GameObject.FindWithTag("MapBackground");
+            if (backgroundObject == null)
+            {
+                Debug.LogError("[GameManager] Could not find a GameObject with the 'MapBackground' tag. Using default boundaries.");
+                return;
+            }
+
+            SpriteRenderer spriteRenderer = backgroundObject.GetComponent<SpriteRenderer>();
+            if (spriteRenderer == null || spriteRenderer.sprite == null)
+            {
+                Debug.LogError("[GameManager] 'MapBackground' object does not have a valid SpriteRenderer. Using default boundaries.", backgroundObject);
+                return;
+            }
+
+            // Get the world space bounds of the sprite
+            Bounds spriteBounds = spriteRenderer.bounds;
+
+            // Update the networked boundary properties
+            LeftBoundary   = spriteBounds.min.x;
+            RightBoundary  = spriteBounds.max.x;
+            BottomBoundary = spriteBounds.min.y;
+
+            // float topBoundary = spriteBounds.max.y;
+
+            Debug.Log($"[GameManager] New boundaries set from '{backgroundObject.name}': Left={LeftBoundary}, Right={RightBoundary}, Bottom={BottomBoundary}");
+
+            if (_cameraFollow == null)
+            {
+                _cameraFollow = FindObjectOfType<CameraFollow>();
+            }
+
+            if (_cameraFollow != null)
+            {
+                Vector2 minBounds = new Vector2(LeftBoundary, BottomBoundary);
+                Vector2 maxBounds = new Vector2(RightBoundary, spriteBounds.max.y);
+                _cameraFollow.SetBounds(minBounds, maxBounds);
+            }
+        }
         public override void FixedUpdateNetwork()
         {
             if (!HasStateAuthority) return;
@@ -120,6 +169,8 @@ namespace _GAME.Scripts.Core
 
         private void StartRound()
         {
+            UpdateBoundariesFromBackground();
+
             CurrentState   = GameState.Countdown;
             CountdownTimer = countdownDuration;
             GameplayFrozen = true;
@@ -354,13 +405,12 @@ namespace _GAME.Scripts.Core
         private void CheckBoundaries()
         {
             if (player1 != null && IsOutOfBounds(player1.transform.position)) EndRoundByBoundary(player1);
-
             if (player2 != null && IsOutOfBounds(player2.transform.position)) EndRoundByBoundary(player2);
         }
 
         private bool IsOutOfBounds(Vector3 position)
         {
-            return position.x < leftBoundary || position.x > rightBoundary || position.y < bottomBoundary;
+            return position.x < LeftBoundary || position.x > RightBoundary || position.y < BottomBoundary;
         }
 
         /// <summary>
