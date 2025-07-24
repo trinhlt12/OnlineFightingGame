@@ -166,6 +166,8 @@ namespace _GAME.Scripts.Core
 
             _stateMachine.AddAnyTransition(dieState,
                 new FuncPredicate(() => DieState.ShouldEnterDieState(this)));
+            _stateMachine.AddTransition(dieState, idleState,
+                new FuncPredicate(() => ShouldExitDieState()));
 
             _stateMachine.AddTransition(idleState, dashState,
                 new FuncPredicate(() => WasDashPressedThisFrame && CanDash));
@@ -231,6 +233,29 @@ namespace _GAME.Scripts.Core
         {
             var gameManager = FindObjectOfType<GameManager>();
             return gameManager != null && gameManager.IsGameplayFrozen();
+        }
+
+        /// <summary>
+        /// Check if should exit DieState - triggers on round reset
+        /// </summary>
+        private bool ShouldExitDieState()
+        {
+            // Only authority can trigger state changes
+            if (!HasStateAuthority) return false;
+
+            // Only exit if currently in DieState
+            if (!(_stateMachine.CurrentState is DieState)) return false;
+
+            var gameManager = FindObjectOfType<GameManager>();
+            if (gameManager == null) return false;
+
+            // Exit DieState when:
+            // 1. Round is restarting (Countdown state)
+            // 2. Or player health is restored (for round reset)
+            bool shouldExit = gameManager.GetCurrentState() == GameManager.GameState.Countdown ||
+                gameManager.GetCurrentState() == GameManager.GameState.WaitingToStart;
+
+            return shouldExit;
         }
 
         public HitState GetHitState()
