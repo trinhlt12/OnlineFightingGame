@@ -121,7 +121,133 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: Dying_KG_2_0
+      rect:
+        serializedVersion: 2
+        x: 29
+        y: 0
+        width: 39
+        height: 60
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6976a80e68cc7704b96d59a020d22076
+      internalID: -1690554427
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dying_KG_2_1
+      rect:
+        serializedVersion: 2
+        x: 105
+        y: 0
+        width: 57
+        height: 55
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c1c0fbd2903db304486449c414628d16
+      internalID: -702955232
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dying_KG_2_2
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 0
+        width: 57
+        height: 48
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f0b12f3990e085a47a6acafdd7d83a17
+      internalID: -61549092
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dying_KG_2_3
+      rect:
+        serializedVersion: 2
+        x: 308
+        y: 0
+        width: 64
+        height: 36
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5fd57ff6ad5ed0146afcf3b133886280
+      internalID: 2074039750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dying_KG_2_4
+      rect:
+        serializedVersion: 2
+        x: 408
+        y: 0
+        width: 66
+        height: 23
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b4aa064a7f242f0428d8c972723cfecb
+      internalID: 2018217269
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dying_KG_2_5
+      rect:
+        serializedVersion: 2
+        x: 508
+        y: 0
+        width: 66
+        height: 23
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8302201d215a8b54e91c8179fa89e58f
+      internalID: -187446653
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -132,7 +258,13 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Dying_KG_2_0: -1690554427
+      Dying_KG_2_1: -702955232
+      Dying_KG_2_2: -61549092
+      Dying_KG_2_3: 2074039750
+      Dying_KG_2_4: 2018217269
+      Dying_KG_2_5: -187446653
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
