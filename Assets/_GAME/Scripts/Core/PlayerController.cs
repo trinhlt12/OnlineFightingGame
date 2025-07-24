@@ -32,6 +32,7 @@ namespace _GAME.Scripts.Core
 
         // ==================== COMPONENTS ====================
         public  Rigidbody2D           _rigidbody;
+        public  CapsuleCollider2D     _collider;
         public  NetworkedStateMachine _stateMachine;
         private ComboController       _comboController;
 
@@ -120,6 +121,7 @@ namespace _GAME.Scripts.Core
         private void InitializeComponents()
         {
             _rigidbody       = GetComponent<Rigidbody2D>();
+            _collider        = GetComponent<CapsuleCollider2D>();
             _stateMachine    = GetComponent<NetworkedStateMachine>() ?? gameObject.AddComponent<NetworkedStateMachine>();
             _comboController = GetComponent<ComboController>();
 

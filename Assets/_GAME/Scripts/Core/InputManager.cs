@@ -18,7 +18,7 @@ public class InputManager : MonoBehaviour, INetworkRunnerCallbacks
     [Header("Combat Input")]
     [SerializeField] private KeyCode attackKey = KeyCode.J;
     [SerializeField] private KeyCode specialKey = KeyCode.K;
-    [SerializeField] private KeyCode dodgeKey = KeyCode.L;
+    [SerializeField] private KeyCode dashKey = KeyCode.LeftShift;
 
     [Header("Debug")]
     [SerializeField] private bool enableDebugLogs = false;
@@ -107,7 +107,7 @@ public class InputManager : MonoBehaviour, INetworkRunnerCallbacks
 
         // Future combat inputs
         buttons = buttons.Set(_GAME.Scripts.Core.NetworkButtons.Special, Input.GetKey(specialKey));
-        buttons = buttons.Set(_GAME.Scripts.Core.NetworkButtons.Dodge, Input.GetKey(dodgeKey));
+        buttons = buttons.Set(_GAME.Scripts.Core.NetworkButtons.Dodge, Input.GetKey(this.dashKey));
 
         _inputData.buttons = buttons;
 
