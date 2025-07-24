@@ -2764,7 +2764,7 @@ MonoBehaviour:
   leftHealthBar: {fileID: 1394207240}
   rightHealthBar: {fileID: 1192747103}
   timerText: {fileID: 2021031165}
-  roundText: {fileID: 0}
+  roundText: {fileID: 1712411546}
   _TimeRemaining: 0
   _TimerActive: 0
   _CurrentRound: 0
