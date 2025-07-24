@@ -35,6 +35,7 @@ namespace _GAME.Scripts.UI
                 winPanel.SetActive(true);
                 if (enableDebug) Debug.Log("[WinLoseUI] Showing WIN panel");
             }
+
         }
 
         /// <summary>
@@ -49,6 +50,7 @@ namespace _GAME.Scripts.UI
                 losePanel.SetActive(true);
                 if (enableDebug) Debug.Log("[WinLoseUI] Showing LOSE panel");
             }
+
         }
 
         /// <summary>

@@ -82,6 +82,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCOverlapHit.cs" />
     <Compile Include="Assets\_GAME\Scripts\Core\InputManager.cs" />
     <Compile Include="Assets\_GAME\Scripts\GameLogic.cs" />
+    <Compile Include="Assets\_GAME\Scripts\UI\RematchManager.cs" />
     <Compile Include="Assets\_GAME\Scripts\Singleton.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\KCCProcessorProvider.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCQuaternionExtensions.cs" />

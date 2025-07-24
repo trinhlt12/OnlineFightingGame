@@ -440,5 +440,47 @@ namespace _GAME.Scripts.Core
         public bool      IsGameplayFrozen() => GameplayFrozen;
         public float     GetCountdownTime() => CountdownTimer;
         public GameState GetCurrentState()  => CurrentState;
+
+        /// <summary>
+        /// Reset game to waiting state for rematch - Game Jam Version
+        /// </summary>
+        public void ResetToWaitingState()
+        {
+            if (!HasStateAuthority) return;
+
+            var spawnManager = FindObjectOfType<CharacterSpawnManager>();
+            if (spawnManager != null)
+            {
+                if (spawnManager.HasStateAuthority)
+                {
+                    spawnManager.DespawnAllCharacters();
+                    Debug.Log("[GameManager] Called DespawnAllCharacters from spawn manager.");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[GameManager] CharacterSpawnManager not found during reset. Cannot despawn old characters.");
+            }
+
+            // Reset game state
+            CurrentState   = GameState.WaitingToStart;
+            CurrentRound   = 1;
+            Player1Wins    = 0;
+            Player2Wins    = 0;
+            GameplayFrozen = true;
+
+            // Reset timers
+            CountdownTimer     = 0;
+            nextRoundStartTime = 0;
+
+            // Hide/reset UI
+            gameHUD?.StopTimer();
+            roundProgressUI?.RPC_ResetAllProgress();
+
+            // Unfreeze players for character selection
+            UnfreezeAllPlayers();
+
+            Debug.Log("[GameManager] Reset to waiting state for rematch");
+        }
     }
 }
