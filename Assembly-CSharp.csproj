@@ -88,6 +88,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCTypesExtensions.cs" />
     <Compile Include="Assets\_GAME\Scripts\FSM\ConcreteState\DashState.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkFloatArray.cs" />
+    <Compile Include="Assets\_GAME\Scripts\FSM\ConcreteState\DieState.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\KCCRecorder.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkBool.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Core\KCC.cs" />
@@ -110,6 +111,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCGameObjectExtensions.cs" />
     <Compile Include="Assets\_GAME\Scripts\FSM\IPredicate.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCFloatExtensions.cs" />
+    <Compile Include="Assets\_GAME\Scripts\Core\GameManager.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Attributes\KCCLayerAtribute.cs" />
     <Compile Include="Assets\_GAME\Scripts\Combat\HitboxVisualizer.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\ScriptableKCCProcessorProvider.cs" />
@@ -130,6 +132,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Extensions\KCCQuaternionExtensions.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\ScriptableKCCProcessor.cs" />
     <Compile Include="Assets\_GAME\Scripts\CharacterSelectionDebug.cs" />
+    <Compile Include="Assets\_GAME\Scripts\UI\CountdownUI.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\Collections\KCCCollisions.cs" />
     <Compile Include="Assets\_GAME\Scripts\FSM\NetworkedStateMachine.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkEnum.cs" />

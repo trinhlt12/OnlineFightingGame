@@ -1,5 +1,6 @@
 namespace _GAME.Scripts.FSM
 {
+    using _GAME.Scripts.Core;
     using Fusion;
     using UnityEngine;
 
@@ -9,9 +10,11 @@ namespace _GAME.Scripts.FSM
     /// </summary>
     public abstract class NetworkedBaseState<T> : IState where T : NetworkBehaviour
     {
-        protected readonly T        entity;
-        protected readonly Animator animator;
-        private            string   animationName;
+        protected readonly T           entity;
+        protected readonly Animator    animator;
+        private            string      animationName;
+        private static     GameManager _cachedGameManager;
+
         protected void SetAnimationName(string newName)
         {
             this.animationName = newName;
@@ -31,15 +34,14 @@ namespace _GAME.Scripts.FSM
         /// <param name="animator">Optional animator component (will try to find on entity if null)</param>
         protected NetworkedBaseState(T entity, string animationName, Animator animator = null)
         {
-            this.entity = entity;
+            this.entity        = entity;
             this.animationName = animationName;
-            this.animator = animator ?? entity.GetComponent<Animator>();
+            this.animator      = animator ?? entity.GetComponent<Animator>();
         }
 
         public virtual void EnterState()
         {
-            if (EnableStateLogs)
-                Debug.Log($"[{GetType().Name}] EnterState - Authority: {(entity.HasStateAuthority ? "Server" : "Client")}, Animation: {animationName ?? "None"}");
+            if (EnableStateLogs) Debug.Log($"[{GetType().Name}] EnterState - Authority: {(entity.HasStateAuthority ? "Server" : "Client")}, Animation: {animationName ?? "None"}");
 
             // Automatically play state animation
             PlayStateAnimation();
@@ -48,17 +50,20 @@ namespace _GAME.Scripts.FSM
         public virtual void StateUpdate()
         {
             // Called every frame on all clients for visual updates
+            if (_cachedGameManager == null) _cachedGameManager = Object.FindObjectOfType<GameManager>();
+            if (_cachedGameManager != null && _cachedGameManager.IsGameplayFrozen()) return;
         }
 
         public virtual void StateFixedUpdate()
         {
             // Called every network tick, only on state authority for game logic
+            if (_cachedGameManager == null) _cachedGameManager = Object.FindObjectOfType<GameManager>();
+            if (_cachedGameManager != null && _cachedGameManager.IsGameplayFrozen()) return;
         }
 
         public virtual void ExitState()
         {
-            if (EnableStateLogs)
-                Debug.Log($"[{GetType().Name}] ExitState - Authority: {(entity.HasStateAuthority ? "Server" : "Client")}");
+            if (EnableStateLogs) Debug.Log($"[{GetType().Name}] ExitState - Authority: {(entity.HasStateAuthority ? "Server" : "Client")}");
         }
 
         /// <summary>
@@ -69,16 +74,14 @@ namespace _GAME.Scripts.FSM
         {
             if (string.IsNullOrEmpty(animationName))
             {
-                if (EnableStateLogs)
-                    Debug.Log($"[{GetType().Name}] No animation name specified, skipping animation playback");
+                if (EnableStateLogs) Debug.Log($"[{GetType().Name}] No animation name specified, skipping animation playback");
                 return;
             }
 
             // Try multiple ways to play animation based on entity type
             if (TryPlayAnimationViaPlayerController() || TryPlayAnimationViaAnimator())
             {
-                if (EnableStateLogs)
-                    Debug.Log($"[{GetType().Name}] Successfully played animation: {animationName}");
+                if (EnableStateLogs) Debug.Log($"[{GetType().Name}] Successfully played animation: {animationName}");
             }
             else
             {
@@ -113,9 +116,9 @@ namespace _GAME.Scripts.FSM
         }
 
         // Helper methods for common networking operations
-        protected bool HasStateAuthority => entity.HasStateAuthority;
-        protected bool HasInputAuthority => entity.HasInputAuthority;
-        protected NetworkRunner Runner => entity.Runner;
+        protected bool          HasStateAuthority => entity.HasStateAuthority;
+        protected bool          HasInputAuthority => entity.HasInputAuthority;
+        protected NetworkRunner Runner            => entity.Runner;
 
         /// <summary>
         /// Play animation if animator is available (with crossfade)
@@ -203,8 +206,7 @@ namespace _GAME.Scripts.FSM
                 PlayAnimation(customAnimationName, crossFade);
             }
 
-            if (EnableStateLogs)
-                Debug.Log($"[{GetType().Name}] Played custom animation: {customAnimationName}");
+            if (EnableStateLogs) Debug.Log($"[{GetType().Name}] Played custom animation: {customAnimationName}");
         }
     }
 
@@ -214,16 +216,16 @@ namespace _GAME.Scripts.FSM
     /// </summary>
     public abstract class SimpleBaseState<T> : IState
     {
-        protected readonly T entity;
+        protected readonly T        entity;
         protected readonly Animator animator;
-        protected readonly string animationName;
-        protected const float crossFadeDuration = 0.1f;
+        protected readonly string   animationName;
+        protected const    float    crossFadeDuration = 0.1f;
 
         protected SimpleBaseState(T entity, string animationName, Animator animator = null)
         {
-            this.entity = entity;
+            this.entity        = entity;
             this.animationName = animationName;
-            this.animator = animator;
+            this.animator      = animator;
         }
 
         public virtual void EnterState()
@@ -231,9 +233,9 @@ namespace _GAME.Scripts.FSM
             PlayStateAnimation();
         }
 
-        public virtual void StateUpdate() { }
+        public virtual void StateUpdate()      { }
         public virtual void StateFixedUpdate() { }
-        public virtual void ExitState() { }
+        public virtual void ExitState()        { }
 
         protected virtual void PlayStateAnimation()
         {

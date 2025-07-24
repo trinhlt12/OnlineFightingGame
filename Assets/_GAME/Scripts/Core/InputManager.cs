@@ -52,6 +52,14 @@ public class InputManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
+        var gameManager = FindObjectOfType<_GAME.Scripts.Core.GameManager>();
+        if (gameManager != null && gameManager.IsGameplayFrozen())
+        {
+            // Send empty input when gameplay is frozen
+            var emptyInput = new NetworkInputData();
+            input.Set(emptyInput);
+            return;
+        }
         // Store the previous frame's button states before updating
         _inputData.previousButtons = _inputData.buttons;
 
