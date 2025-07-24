@@ -105,6 +105,7 @@
     <Compile Include="Assets\Photon\FusionAddons\KCC\Processors\Core\NetworkTRSPProcessor.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\KCCTransformSampler.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Stages\BeginMove.cs" />
+    <Compile Include="Assets\_GAME\Scripts\UI\RoundProgressUI.cs" />
     <Compile Include="Assets\Photon\PhotonLibs\WebSocket\WebSocket.cs" />
     <Compile Include="Assets\_GAME\Scripts\UI\UICanvas.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\StatsWriter.cs" />

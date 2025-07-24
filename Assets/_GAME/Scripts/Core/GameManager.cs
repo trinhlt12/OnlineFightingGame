@@ -17,9 +17,10 @@ namespace _GAME.Scripts.Core
         [SerializeField]                            private float rightBoundary  = 10f;
         [SerializeField]                            private float bottomBoundary = -5f;
 
-        [Header("References")] [SerializeField] private GameHUD      gameHUD;
-        [SerializeField]                        private HealthSystem healthSystem;
-        [SerializeField]                        private CountdownUI  countdownUI;
+        [Header("References")] [SerializeField] private GameHUD         gameHUD;
+        [SerializeField]                        private HealthSystem    healthSystem;
+        [SerializeField]                        private CountdownUI     countdownUI;
+        [SerializeField]                        private RoundProgressUI roundProgressUI;
 
         // Network Properties
         [Networked] public  GameState CurrentState       { get; set; }
@@ -47,8 +48,9 @@ namespace _GAME.Scripts.Core
         public override void Spawned()
         {
             // Find references
-            if (gameHUD == null) gameHUD           = FindObjectOfType<GameHUD>();
-            if (healthSystem == null) healthSystem = FindObjectOfType<HealthSystem>();
+            if (gameHUD == null) gameHUD                 = FindObjectOfType<GameHUD>();
+            if (healthSystem == null) healthSystem       = FindObjectOfType<HealthSystem>();
+            if (roundProgressUI == null) roundProgressUI = FindObjectOfType<RoundProgressUI>();
 
             // Find players
             var players = FindObjectsOfType<PlayerController>();
@@ -75,9 +77,7 @@ namespace _GAME.Scripts.Core
                 case GameState.WaitingToStart:
                     // Do nothing, wait for manual start
                     break;
-                case GameState.Countdown:
-                    UpdateCountdown();
-                    break;
+                case GameState.Countdown: UpdateCountdown(); break;
                 case GameState.Fighting:
                     UpdateFighting();
                     CheckBoundaries();
@@ -100,6 +100,13 @@ namespace _GAME.Scripts.Core
             CurrentRound = 1;
             Player1Wins  = 0;
             Player2Wins  = 0;
+
+            // RESET ROUND PROGRESS UI
+            if (roundProgressUI != null)
+            {
+                roundProgressUI.RPC_ResetAllProgress();
+            }
+
             StartRound();
         }
 
@@ -111,6 +118,8 @@ namespace _GAME.Scripts.Core
 
             // Reset players
             ResetPlayersForNewRound();
+
+            FreezeAllPlayers();
 
             // Update UI
             gameHUD?.SetRound(CurrentRound);
@@ -128,6 +137,9 @@ namespace _GAME.Scripts.Core
                 // Start fighting
                 CurrentState   = GameState.Fighting;
                 GameplayFrozen = false;
+                // UNFREEZE ALL ANIMATIONS + LOGIC
+                UnfreezeAllPlayers();
+
                 gameHUD?.StartTimer(roundDuration);
 
                 Debug.Log($"[GameManager] Round {CurrentRound} - FIGHT!");
@@ -179,6 +191,8 @@ namespace _GAME.Scripts.Core
         {
             CurrentState   = GameState.RoundEnd;
             GameplayFrozen = true;
+            FreezeAllPlayers();
+
             gameHUD?.StopTimer();
 
             Debug.Log($"[GameManager] {message}");
@@ -188,6 +202,14 @@ namespace _GAME.Scripts.Core
                 Player1Wins++;
             else if (winner == 2) Player2Wins++;
 
+            // UPDATE ROUND PROGRESS UI - NEW LOGIC
+            if (roundProgressUI != null && winner > 0)
+            {
+                int roundIndex  = CurrentRound - 1; // Convert to 0-based index
+                int winnerIndex = winner - 1;       // Convert to 0-based index (Player 1 = 0, Player 2 = 1)
+                roundProgressUI.RPC_SetRoundResult(roundIndex, winnerIndex);
+            }
+
             // Check game end conditions
             if (ShouldEndGame())
             {
@@ -195,9 +217,9 @@ namespace _GAME.Scripts.Core
             }
             else
             {
-                // NETWORK-SAFE: Set timer for next round
+                // Start next round
                 CurrentRound++;
-                nextRoundStartTime = Runner.SimulationTime + 2f; // 2 second delay
+                nextRoundStartTime = Runner.SimulationTime + 2f;
             }
         }
 
@@ -253,6 +275,7 @@ namespace _GAME.Scripts.Core
             // Reset states
             ResetPlayerStates();
         }
+
         /// <summary>
         /// Reset player states for new round - Game Jam Quick Fix
         /// </summary>
@@ -290,6 +313,78 @@ namespace _GAME.Scripts.Core
         private bool IsOutOfBounds(Vector3 position)
         {
             return position.x < leftBoundary || position.x > rightBoundary || position.y < bottomBoundary;
+        }
+
+        /// <summary>
+        /// Freeze all player animations and logic
+        /// </summary>
+        private void FreezeAllPlayers()
+        {
+            SetPlayersFrozen(true);
+        }
+
+        /// <summary>
+        /// Unfreeze all player animations and logic
+        /// </summary>
+        private void UnfreezeAllPlayers()
+        {
+            SetPlayersFrozen(false);
+        }
+
+        /// <summary>
+        /// Set freeze state for all players - includes animation
+        /// </summary>
+        private void SetPlayersFrozen(bool frozen)
+        {
+            if (player1 != null) SetPlayerFrozen(player1, frozen);
+            if (player2 != null) SetPlayerFrozen(player2, frozen);
+        }
+
+        /// <summary>
+        /// Freeze/unfreeze individual player - Game Jam Quick Fix
+        /// </summary>
+        private void SetPlayerFrozen(PlayerController player, bool frozen)
+        {
+            if (player == null) return;
+
+            // Freeze/unfreeze animator
+            var animator = player.GetComponent<Animator>();
+            if (animator != null)
+            {
+                animator.speed = frozen ? 0f : 1f;
+            }
+
+            // Freeze/unfreeze physics
+            if (player._rigidbody != null)
+            {
+                if (frozen)
+                {
+                    // Store current velocity before freezing
+                    var velocityField = typeof(PlayerController).GetField("_frozenVelocity",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                    if (velocityField == null)
+                    {
+                        // Add private field to PlayerController if not exists
+                        Debug.LogWarning("[GameManager] _frozenVelocity field not found in PlayerController");
+                    }
+                    else
+                    {
+                        velocityField.SetValue(player, player._rigidbody.velocity);
+                    }
+
+                    player._rigidbody.velocity    = Vector2.zero;
+                    player._rigidbody.isKinematic = true;
+                }
+                else
+                {
+                    player._rigidbody.isKinematic = false;
+                    // Restore velocity if needed (for smooth unfreeze)
+                }
+            }
+
+            // Freeze/unfreeze input
+            player.SetInputEnabled(!frozen);
         }
 
         // ==================== PUBLIC API ====================
