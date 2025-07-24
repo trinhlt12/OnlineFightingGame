@@ -50,10 +50,12 @@ namespace _GAME.Scripts.FSM.ConcreteState
             if (!entity.HasStateAuthority) return;
 
             // Notify GameManager once (after a small delay to let animation start)
-            if (!hasNotifiedGameManager && entity.Runner.Tick > entity.Runner.Tick + 5)
+            if (!hasNotifiedGameManager)
             {
                 hasNotifiedGameManager = true;
                 gameManager?.EndRoundByDeath(entity);
+                Debug.Log("[DieState] Notified GameManager of player death");
+
             }
         }
 

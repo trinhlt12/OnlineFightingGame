@@ -5,6 +5,8 @@ using _GAME.Scripts.Combat;
 
 namespace _GAME.Scripts.Core
 {
+    using _GAME.Scripts.FSM;
+
     public class GameManager : NetworkBehaviour
     {
         [Header("Round Settings")] [SerializeField] private float roundDuration     = 60f;
@@ -19,14 +21,14 @@ namespace _GAME.Scripts.Core
         [SerializeField]                        private HealthSystem healthSystem;
         [SerializeField]                        private CountdownUI  countdownUI;
 
-
         // Network Properties
-        [Networked] public GameState CurrentState   { get; set; }
-        [Networked] public int       CurrentRound   { get; set; }
-        [Networked] public int       Player1Wins    { get; set; }
-        [Networked] public int       Player2Wins    { get; set; }
-        [Networked] public float     CountdownTimer { get; set; }
-        [Networked] public bool      GameplayFrozen { get; set; }
+        [Networked] public  GameState CurrentState       { get; set; }
+        [Networked] public  int       CurrentRound       { get; set; }
+        [Networked] public  int       Player1Wins        { get; set; }
+        [Networked] public  int       Player2Wins        { get; set; }
+        [Networked] public  float     CountdownTimer     { get; set; }
+        [Networked] public  bool      GameplayFrozen     { get; set; }
+        [Networked] private float     nextRoundStartTime { get; set; }
 
         // Player References
         private PlayerController player1;
@@ -79,6 +81,14 @@ namespace _GAME.Scripts.Core
                 case GameState.Fighting:
                     UpdateFighting();
                     CheckBoundaries();
+                    break;
+                case GameState.RoundEnd:
+                    // Check if time to start next round
+                    if (nextRoundStartTime > 0 && Runner.SimulationTime >= nextRoundStartTime)
+                    {
+                        nextRoundStartTime = 0;
+                        StartRound();
+                    }
                     break;
             }
         }
@@ -185,9 +195,9 @@ namespace _GAME.Scripts.Core
             }
             else
             {
-                // Start next round after delay
+                // NETWORK-SAFE: Set timer for next round
                 CurrentRound++;
-                Invoke(nameof(StartRound), 2f);
+                nextRoundStartTime = Runner.SimulationTime + 2f; // 2 second delay
             }
         }
 
@@ -211,6 +221,7 @@ namespace _GAME.Scripts.Core
         {
             RPC_StartGame();
         }
+
         private bool ShouldEndGame()
         {
             // Win conditions: 2-0 or 2-1
@@ -235,9 +246,38 @@ namespace _GAME.Scripts.Core
                 healthSystem.Player2Health = 100f;
             }
 
-            // Reset player positions (simple)
+            // Reset positions
             if (player1 != null) player1.transform.position = new Vector3(-2f, 0f, 0f);
             if (player2 != null) player2.transform.position = new Vector3(2f, 0f, 0f);
+
+            // Reset states
+            ResetPlayerStates();
+        }
+        /// <summary>
+        /// Reset player states for new round - Game Jam Quick Fix
+        /// </summary>
+        private void ResetPlayerStates()
+        {
+            ResetPlayerToIdle(player1);
+            ResetPlayerToIdle(player2);
+        }
+
+        private void ResetPlayerToIdle(PlayerController player)
+        {
+            if (player == null) return;
+
+            var stateMachine = player.GetComponent<NetworkedStateMachine>();
+            if (stateMachine == null) return;
+
+            // Get idle state via reflection
+            var field = typeof(PlayerController).GetField("_idleState",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            var idleState = field?.GetValue(player);
+            if (idleState != null)
+            {
+                stateMachine.ChangeState(idleState as IState);
+            }
         }
 
         private void CheckBoundaries()
