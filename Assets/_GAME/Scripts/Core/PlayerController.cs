@@ -151,6 +151,7 @@ namespace _GAME.Scripts.Core
             var attackState = new AttackState(this);
             var hitState    = new HitState(this);
             var dashState   = new DashState(this);
+            var dieState    = new DieState(this);
 
             _hitState = hitState;
 
@@ -161,6 +162,10 @@ namespace _GAME.Scripts.Core
             _stateMachine.RegisterState(attackState);
             _stateMachine.RegisterState(hitState);
             _stateMachine.RegisterState(dashState);
+            _stateMachine.RegisterState(dieState);
+
+            _stateMachine.AddAnyTransition(dieState,
+                new FuncPredicate(() => DieState.ShouldEnterDieState(this)));
 
             _stateMachine.AddTransition(idleState, dashState,
                 new FuncPredicate(() => WasDashPressedThisFrame && CanDash));
@@ -490,14 +495,14 @@ namespace _GAME.Scripts.Core
 
         public void SetDashCollision(bool isDashing)
         {
-            if(!HasStateAuthority) return;
+            if (!HasStateAuthority) return;
             var myCollider = this._collider;
-            if(myCollider == null) return;
+            if (myCollider == null) return;
 
             var allPlayerController = GetAllPlayersInSession();
             foreach (var otherPlayer in allPlayerController)
             {
-                if(otherPlayer == this) continue;
+                if (otherPlayer == this) continue;
                 var otherCollider = otherPlayer._collider;
                 if (otherCollider == null) continue;
                 Physics2D.IgnoreCollision(myCollider, otherCollider, isDashing);
@@ -507,7 +512,7 @@ namespace _GAME.Scripts.Core
         private List<PlayerController> GetAllPlayersInSession()
         {
             var players = new List<PlayerController>();
-            if(Runner == null) return players;
+            if (Runner == null) return players;
 
             foreach (var player in FindObjectsOfType<PlayerController>())
             {
