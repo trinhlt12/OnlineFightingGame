@@ -13,6 +13,7 @@ namespace _GAME.Scripts.UI
         [SerializeField] private Image healthFillImage;
         [SerializeField] private Image damageFillImage;
         [SerializeField] private TextMeshProUGUI playerNameText;
+        [SerializeField] private TextMeshProUGUI healthText;
 
         [Header("Configuration")]
         [SerializeField] private bool isLeftSide = true;
@@ -72,6 +73,12 @@ namespace _GAME.Scripts.UI
             {
                 healthFillImage.fillAmount = percentage;
                 healthFillImage.color = percentage > 0.3f ? healthColor : lowHealthColor;
+            }
+
+            // Update health text
+            if (healthText != null)
+            {
+                healthText.text = $"{Mathf.RoundToInt(currentHealth)}/{Mathf.RoundToInt(maxHealth)}";
             }
 
             // Update damage fill with simple delay

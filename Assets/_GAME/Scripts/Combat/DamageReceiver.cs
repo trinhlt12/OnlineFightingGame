@@ -187,12 +187,10 @@ namespace _GAME.Scripts.Combat
             var gameHUD = FindObjectOfType<GameHUD>();
             if (gameHUD != null)
             {
-                // Simple player index detection
-                int playerIndex = DeterminePlayerIndex(this._playerController);
-                if (playerIndex >= 0)
+                var healthSystem = FindObjectOfType<HealthSystem>();
+                if (healthSystem != null)
                 {
-                    float currentHealth = 100f - damage; // Simple tracking
-                    gameHUD.SetPlayerHealth(playerIndex, currentHealth);
+                    healthSystem.TakeDamage(this._playerController, damage);
                 }
             }
             return true;
