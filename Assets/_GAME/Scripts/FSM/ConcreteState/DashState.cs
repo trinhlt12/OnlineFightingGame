@@ -37,6 +37,7 @@ namespace _GAME.Scripts.FSM.ConcreteState
             }
 
             base.EnterState();
+            this.entity.SetDashCollision(true);
 
             // Perform dash movement
             entity.PerformDash();
@@ -59,6 +60,7 @@ namespace _GAME.Scripts.FSM.ConcreteState
         public override void ExitState()
         {
             base.ExitState();
+            entity.SetDashCollision(false);
         }
 
         /// <summary>

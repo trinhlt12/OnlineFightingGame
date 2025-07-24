@@ -1,5 +1,6 @@
 namespace _GAME.Scripts.Core
 {
+    using System.Collections.Generic;
     using UnityEngine;
     using Fusion;
     using _GAME.Scripts.FSM;
@@ -485,6 +486,37 @@ namespace _GAME.Scripts.Core
         public bool IsAttackComplete()
         {
             return _comboController?.IsAttackComplete() ?? true;
+        }
+
+        public void SetDashCollision(bool isDashing)
+        {
+            if(!HasStateAuthority) return;
+            var myCollider = this._collider;
+            if(myCollider == null) return;
+
+            var allPlayerController = GetAllPlayersInSession();
+            foreach (var otherPlayer in allPlayerController)
+            {
+                if(otherPlayer == this) continue;
+                var otherCollider = otherPlayer._collider;
+                if (otherCollider == null) continue;
+                Physics2D.IgnoreCollision(myCollider, otherCollider, isDashing);
+            }
+        }
+
+        private List<PlayerController> GetAllPlayersInSession()
+        {
+            var players = new List<PlayerController>();
+            if(Runner == null) return players;
+
+            foreach (var player in FindObjectsOfType<PlayerController>())
+            {
+                if (player.Object != null && player.Object.IsValid)
+                {
+                    players.Add(player);
+                }
+            }
+            return players;
         }
 
         // ==================== ANIMATION SYSTEM ====================
