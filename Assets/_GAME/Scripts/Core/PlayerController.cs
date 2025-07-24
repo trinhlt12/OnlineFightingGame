@@ -423,6 +423,9 @@ namespace _GAME.Scripts.Core
         {
             if (!HasStateAuthority) return;
 
+            var GameManager = FindObjectOfType<GameManager>();
+            if (GameManager != null && GameManager.IsGameplayFrozen()) return;
+
             var velocity = _rigidbody.velocity;
             velocity.x          = horizontalInput * moveSpeed;
             _rigidbody.velocity = velocity;
