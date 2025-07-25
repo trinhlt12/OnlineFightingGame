@@ -302,4 +302,67 @@ public class CharacterSpawnManager : NetworkBehaviour
             Debug.LogWarning("[CharacterSpawnManager] No available characters assigned!");
         }
     }
+
+    /// <summary>
+    /// Get original spawn position for a player
+    /// </summary>
+    public Vector3 GetPlayerSpawnPosition(PlayerRef playerRef)
+    {
+        if (spawnedCharacters.TryGetValue(playerRef, out var character) && character != null)
+        {
+            // Try to get stored spawn position from NetworkedCharacterSetup
+            var characterSetup = character.GetComponent<NetworkedCharacterSetup>();
+            if (characterSetup != null)
+            {
+                return characterSetup.NetworkPosition;
+            }
+
+            // Fallback: use current position
+            return character.transform.position;
+        }
+
+        return Vector3.zero;
+    }
+    public void ResetAllPlayersToSpawnPositions()
+    {
+        foreach (var kvp in spawnedCharacters)
+        {
+            PlayerRef     playerRef = kvp.Key;
+            NetworkObject character = kvp.Value;
+
+            if (character != null)
+            {
+                var characterSetup = character.GetComponent<NetworkedCharacterSetup>();
+                if (characterSetup != null)
+                {
+                    Vector3 spawnPos = characterSetup.NetworkPosition;
+                    character.transform.position = spawnPos;
+
+                    if (enableDebugLogs)
+                        Debug.Log($"[CharacterSpawnManager] Reset player {playerRef} to spawn position: {spawnPos}");
+                }
+            }
+        }
+    }
+    public Dictionary<PlayerRef, Vector3> GetAllPlayerSpawnPositions()
+    {
+        var positions = new Dictionary<PlayerRef, Vector3>();
+
+        foreach (var kvp in spawnedCharacters)
+        {
+            PlayerRef     playerRef = kvp.Key;
+            NetworkObject character = kvp.Value;
+
+            if (character != null)
+            {
+                var characterSetup = character.GetComponent<NetworkedCharacterSetup>();
+                if (characterSetup != null)
+                {
+                    positions[playerRef] = characterSetup.NetworkPosition;
+                }
+            }
+        }
+
+        return positions;
+    }
 }

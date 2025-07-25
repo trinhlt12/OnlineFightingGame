@@ -73,7 +73,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 3
   m_Sprite: {fileID: -1702774060, guid: dac16a52c7d0373468b124f88baedefe, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -156,6 +156,7 @@ GameObject:
   - component: {fileID: 3384668816739674924}
   - component: {fileID: 6880295868648242963}
   - component: {fileID: 7252548706217844053}
+  - component: {fileID: 1417609998722349512}
   m_Layer: 0
   m_Name: Warrior
   m_TagString: Untagged
@@ -265,6 +266,7 @@ MonoBehaviour:
   - {fileID: 7085809471747427103}
   - {fileID: 3384668816739674924}
   - {fileID: 7252548706217844053}
+  - {fileID: 1417609998722349512}
 --- !u!114 &6730041619278744568
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -407,3 +409,19 @@ MonoBehaviour:
   _IsInHitState: 0
   enableDashInvincibility: 1
   _IsDashInvincible: 0
+--- !u!114 &1417609998722349512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6351667327372901688}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd6bc9507280484eb850831a36c6eba5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  arrowPrefab: {fileID: 3534670184022396072, guid: 818dd4ccd5523ee4e9afcb5b18a6cde7,
+    type: 3}
+  heightAbovePlayer: 1
+  enableDebugLogs: 0
