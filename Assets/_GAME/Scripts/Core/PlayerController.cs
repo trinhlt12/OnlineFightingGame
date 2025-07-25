@@ -252,8 +252,7 @@ namespace _GAME.Scripts.Core
             // Exit DieState when:
             // 1. Round is restarting (Countdown state)
             // 2. Or player health is restored (for round reset)
-            bool shouldExit = gameManager.GetCurrentState() == GameManager.GameState.Countdown ||
-                gameManager.GetCurrentState() == GameManager.GameState.WaitingToStart;
+            bool shouldExit = gameManager.GetCurrentState() == GameManager.GameState.Countdown || gameManager.GetCurrentState() == GameManager.GameState.WaitingToStart;
 
             return shouldExit;
         }
@@ -374,12 +373,6 @@ namespace _GAME.Scripts.Core
             }
         }
 
-        public override void Render()
-        {
-            // Handle visual updates (facing direction)
-            UpdateVisualDirection();
-        }
-
         private void ResetInputConsumption()
         {
             _dashInputConsumedThisFrame   = false;
@@ -430,9 +423,37 @@ namespace _GAME.Scripts.Core
             velocity.x          = horizontalInput * moveSpeed;
             _rigidbody.velocity = velocity;
 
+            // Update facing direction
             if (horizontalInput != 0)
             {
                 IsFacingRight = horizontalInput > 0;
+            }
+        }
+
+        public override void Render()
+        {
+            if (!HasStateAuthority && Object.HasInputAuthority)
+            {
+                // Apply input immediately on input authority client
+                if (GetInput(out NetworkInputData input))
+                {
+                    // Visual-only movement prediction
+                    UpdateVisualMovement(input.horizontal);
+                }
+            }
+
+            // Existing visual updates
+            UpdateVisualDirection();
+        }
+
+        private void UpdateVisualMovement(float input)
+        {
+            // Light prediction - chỉ cho visual
+            if (Mathf.Abs(input) > 0.1f)
+            {
+                Vector3 pos = transform.position;
+                pos.x              += input * moveSpeed * Time.deltaTime;
+                transform.position =  pos;
             }
         }
 
@@ -602,6 +623,5 @@ namespace _GAME.Scripts.Core
                 _comboController.LogComboState();
             }
         }
-
     }
 }

@@ -19,11 +19,14 @@ namespace _GAME.Scripts.UI
         [SerializeField] private Color countdownColor = Color.white;
         [SerializeField] private Color fightColor = Color.red;
 
-        private bool isAnimating = false;
+        private bool                           isAnimating = false;
+        private _GAME.Scripts.Core.GameManager cachedGameManager;
 
         public override void Spawned()
         {
             HideCountdown();
+            cachedGameManager = FindObjectOfType<_GAME.Scripts.Core.GameManager>();
+
         }
 
         public override void Render()
@@ -55,11 +58,10 @@ namespace _GAME.Scripts.UI
 
         private void UpdateCountdownDisplay()
         {
-            var gameManager = FindObjectOfType<_GAME.Scripts.Core.GameManager>();
-            if (gameManager == null || countdownText == null) return;
+            if (cachedGameManager == null || countdownText == null) return;
 
             // Only show during countdown state
-            if (gameManager.GetCurrentState() != _GAME.Scripts.Core.GameManager.GameState.Countdown)
+            if (cachedGameManager.GetCurrentState() != _GAME.Scripts.Core.GameManager.GameState.Countdown)
             {
                 HideCountdown();
                 return;
@@ -68,11 +70,11 @@ namespace _GAME.Scripts.UI
             // Show countdown panel
             if (countdownPanel != null && !countdownPanel.activeInHierarchy)
             {
-                ShowCountdown(gameManager.CurrentRound);
+                ShowCountdown(cachedGameManager.CurrentRound);
             }
 
             // Update countdown text
-            float timeLeft = gameManager.GetCountdownTime();
+            float timeLeft = cachedGameManager.GetCountdownTime();
             UpdateCountdownText(timeLeft);
         }
 

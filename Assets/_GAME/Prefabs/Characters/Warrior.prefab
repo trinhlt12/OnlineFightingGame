@@ -423,5 +423,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   arrowPrefab: {fileID: 3534670184022396072, guid: 818dd4ccd5523ee4e9afcb5b18a6cde7,
     type: 3}
-  heightAbovePlayer: 1
+  heightAbovePlayer: 3
   enableDebugLogs: 0

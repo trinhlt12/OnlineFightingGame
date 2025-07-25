@@ -53,7 +53,9 @@ public class NetworkedCharacterSetup : NetworkBehaviour
         else
         {
             // Client applies the network position received from server
+            /*
             StartCoroutine(ApplyNetworkPositionWhenReady());
+        */
         }
     }
 
