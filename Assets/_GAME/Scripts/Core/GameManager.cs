@@ -5,8 +5,10 @@ using _GAME.Scripts.Combat;
 
 namespace _GAME.Scripts.Core
 {
+    using System.Collections.Generic;
     using _GAME.Scripts.Camera;
     using _GAME.Scripts.FSM;
+    using Camera = UnityEngine.Camera;
 
     public class GameManager : NetworkBehaviour
     {
@@ -14,12 +16,16 @@ namespace _GAME.Scripts.Core
         [SerializeField]                            private int   maxRounds         = 3;
         [SerializeField]                            private float countdownDuration = 3f;
 
-        [Networked] public float LeftBoundary { get;   set; } = -10f;
-        [Networked] public float RightBoundary  { get; set; } = 10f;
-        [Networked] public float BottomBoundary { get; set; } = -5f;
+        [Networked] public float   LeftBoundary           { get; set; } = -10f;
+        [Networked] public float   RightBoundary          { get; set; } = 10f;
+        [Networked] public float   BottomBoundary         { get; set; } = -5f;
+        [Networked] public Vector2 NetworkCameraMinBounds { get; set; }
+        [Networked] public Vector2 NetworkCameraMaxBounds { get; set; }
+        [Networked] public float   NetworkCameraSize      { get; set; }
 
-        private CameraFollow _cameraFollow;
-
+        private CameraFollow                   _cameraFollow;
+        private CharacterSpawnManager          _characterSpawnManager;
+        private Dictionary<PlayerRef, Vector3> _playerSpawnPositions = new Dictionary<PlayerRef, Vector3>();
 
         [Header("References")] [SerializeField] private GameHUD         gameHUD;
         [SerializeField]                        private HealthSystem    healthSystem;
@@ -57,26 +63,51 @@ namespace _GAME.Scripts.Core
             if (healthSystem == null) healthSystem       = FindObjectOfType<HealthSystem>();
             if (roundProgressUI == null) roundProgressUI = FindObjectOfType<RoundProgressUI>();
             if (winLoseUI == null) winLoseUI             = FindObjectOfType<WinLoseUI>();
+            _characterSpawnManager = FindObjectOfType<CharacterSpawnManager>();
 
             // Find players
             var players = FindObjectsOfType<PlayerController>();
+
             if (players.Length >= 2)
             {
                 player1 = players[0];
                 player2 = players[1];
+
+                StorePlayerSpawnPositions();
             }
 
-            // Server waits for manual start - KHÔNG AUTO START
+            // Server waits for manual start - NO UTO START
             if (HasStateAuthority)
             {
                 CurrentState   = GameState.WaitingToStart;
                 GameplayFrozen = true;
             }
         }
-        /// <summary>
-        /// Finds the map background and dynamically sets the game boundaries based on its size.
-        /// Also updates the camera bounds. This should only be run on the State Authority.
-        /// </summary>
+
+        private void StorePlayerSpawnPositions()
+        {
+            _playerSpawnPositions.Clear();
+
+            if (_characterSpawnManager == null) return;
+
+            // Get spawned characters and their positions
+            var spawnedCharacters = _characterSpawnManager.GetAllSpawnedCharacters();
+
+            foreach (var kvp in spawnedCharacters)
+            {
+                PlayerRef     playerRef = kvp.Key;
+                NetworkObject character = kvp.Value;
+
+                if (character != null)
+                {
+                    Vector3 spawnPos = character.transform.position;
+                    _playerSpawnPositions[playerRef] = spawnPos;
+
+                    Debug.Log($"[GameManager] Stored spawn position for player {playerRef}: {spawnPos}");
+                }
+            }
+        }
+
         private void UpdateBoundariesFromBackground()
         {
             if (!HasStateAuthority) return;
@@ -84,39 +115,95 @@ namespace _GAME.Scripts.Core
             GameObject backgroundObject = GameObject.FindWithTag("MapBackground");
             if (backgroundObject == null)
             {
-                Debug.LogError("[GameManager] Could not find a GameObject with the 'MapBackground' tag. Using default boundaries.");
+                Debug.LogError("[GameManager] Could not find a GameObject with the 'MapBackground' tag.");
                 return;
             }
 
             SpriteRenderer spriteRenderer = backgroundObject.GetComponent<SpriteRenderer>();
             if (spriteRenderer == null || spriteRenderer.sprite == null)
             {
-                Debug.LogError("[GameManager] 'MapBackground' object does not have a valid SpriteRenderer. Using default boundaries.", backgroundObject);
+                Debug.LogError("[GameManager] 'MapBackground' object does not have a valid SpriteRenderer.");
                 return;
             }
 
-            // Get the world space bounds of the sprite
             Bounds spriteBounds = spriteRenderer.bounds;
 
-            // Update the networked boundary properties
-            LeftBoundary   = spriteBounds.min.x;
-            RightBoundary  = spriteBounds.max.x;
-            BottomBoundary = spriteBounds.min.y;
+            // Calculate camera bounds
+            Camera cam           = Camera.main;
+            if (cam == null) cam = FindObjectOfType<Camera>();
 
-            // float topBoundary = spriteBounds.max.y;
-
-            Debug.Log($"[GameManager] New boundaries set from '{backgroundObject.name}': Left={LeftBoundary}, Right={RightBoundary}, Bottom={BottomBoundary}");
-
-            if (_cameraFollow == null)
+            if (cam != null)
             {
-                _cameraFollow = FindObjectOfType<CameraFollow>();
+                // Set optimal camera size
+                float mapWidth     = spriteBounds.size.x;
+                float mapHeight    = spriteBounds.size.y;
+                float screenAspect = (float)Screen.width / Screen.height;
+                float mapAspect    = mapWidth / mapHeight;
+
+                float optimalCameraSize;
+                if (screenAspect > mapAspect)
+                {
+                    optimalCameraSize = mapHeight / 2f;
+                }
+                else
+                {
+                    optimalCameraSize = mapWidth / (2f * screenAspect);
+                }
+
+                optimalCameraSize *= 0.9f; // Add padding
+                optimalCameraSize =  Mathf.Max(optimalCameraSize, 3f);
+
+                // Store networked camera size
+                NetworkCameraSize = optimalCameraSize;
+
+                // Calculate bounds with camera size
+                float cameraHalfHeight = optimalCameraSize;
+                float cameraHalfWidth  = cameraHalfHeight * screenAspect;
+
+                float paddingX = cameraHalfWidth * 0.1f;
+                float paddingY = cameraHalfHeight * 0.1f;
+
+                Vector2 minBounds = new Vector2(
+                    spriteBounds.min.x + cameraHalfWidth - paddingX,
+                    spriteBounds.min.y + cameraHalfHeight - paddingY
+                );
+
+                Vector2 maxBounds = new Vector2(
+                    spriteBounds.max.x - cameraHalfWidth + paddingX,
+                    spriteBounds.max.y - cameraHalfHeight + paddingY
+                );
+
+                // Store networked bounds
+                NetworkCameraMinBounds = minBounds;
+                NetworkCameraMaxBounds = maxBounds;
+
+                // Update game boundaries
+                LeftBoundary   = minBounds.x;
+                RightBoundary  = maxBounds.x;
+                BottomBoundary = minBounds.y;
+
+                Debug.Log($"[GameManager] Server calculated camera bounds: Min={minBounds}, Max={maxBounds}, Size={optimalCameraSize}");
+
+                // Apply immediately on server
+                ApplyCameraBounds();
             }
-
-            if (_cameraFollow != null)
+        }
+        private void ApplyCameraBounds()
+        {
+            var cameraFollow = FindObjectOfType<CameraFollow>();
+            if (cameraFollow != null)
             {
-                Vector2 minBounds = new Vector2(LeftBoundary, BottomBoundary);
-                Vector2 maxBounds = new Vector2(RightBoundary, spriteBounds.max.y);
-                _cameraFollow.SetBounds(minBounds, maxBounds);
+                // Set camera size
+                var cam = cameraFollow.GetComponent<Camera>();
+                if (cam != null)
+                {
+                    cam.orthographicSize = NetworkCameraSize;
+                }
+
+                // Set camera bounds
+                cameraFollow.SetBounds(NetworkCameraMinBounds, NetworkCameraMaxBounds);
+
+                Debug.Log($"[GameManager] Applied camera bounds: Min={NetworkCameraMinBounds}, Max={NetworkCameraMaxBounds}, Size={NetworkCameraSize}");
             }
         }
         public override void FixedUpdateNetwork()
@@ -141,6 +228,15 @@ namespace _GAME.Scripts.Core
                         StartRound();
                     }
                     break;
+            }
+        }
+
+        public override void Render()
+        {
+            // Client: Apply camera bounds when they change
+            if (!HasStateAuthority && NetworkCameraSize > 0)
+            {
+                ApplyCameraBounds();
             }
         }
 
@@ -367,12 +463,40 @@ namespace _GAME.Scripts.Core
                 healthSystem.Player2Health = 100f;
             }
 
-            // Reset positions
-            if (player1 != null) player1.transform.position = new Vector3(-2f, 0f, 0f);
-            if (player2 != null) player2.transform.position = new Vector3(2f, 0f, 0f);
+            // Reset positions to original spawn points
+            ResetPlayersToSpawnPositions();
 
             // Reset states
             ResetPlayerStates();
+        }
+
+        private void ResetPlayersToSpawnPositions()
+        {
+            if (_playerSpawnPositions.Count == 0)
+            {
+                Debug.LogWarning("[GameManager] No stored spawn positions, using fallback positions");
+                // Fallback to hardcoded positions if needed
+                if (player1 != null) player1.transform.position = new Vector3(-2f, 0f, 0f);
+                if (player2 != null) player2.transform.position = new Vector3(2f, 0f, 0f);
+                return;
+            }
+
+            // Reset each player to their spawn position
+            var allPlayers = FindObjectsOfType<PlayerController>();
+
+            foreach (var player in allPlayers)
+            {
+                if (player.Object != null && player.Object.InputAuthority != PlayerRef.None)
+                {
+                    PlayerRef playerRef = player.Object.InputAuthority;
+
+                    if (_playerSpawnPositions.TryGetValue(playerRef, out Vector3 spawnPos))
+                    {
+                        player.transform.position = spawnPos;
+                        Debug.Log($"[GameManager] Reset player {playerRef} to spawn position: {spawnPos}");
+                    }
+                }
+            }
         }
 
         /// <summary>

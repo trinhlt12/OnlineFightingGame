@@ -21,8 +21,9 @@ namespace UI
         [Header("Debug")] [SerializeField] private bool enableDebugLogs = true;
 
         private NetworkRunner _runner;
-        private bool          _isInitialized = false;
-
+        private bool          _isInitialized   = false;
+        private int           _currentMapIndex = -1;
+        private MapData       _currentMapData  = null;
         private void Awake()
         {
             // Setup button listeners
@@ -79,11 +80,129 @@ namespace UI
             {
                 Initialize();
             }
-            RandomSelectMap();
+            RequestMapInfo();
 
             UpdateUI();
         }
+        private void RequestMapInfo()
+        {
+            if (_runner == null) return;
 
+            if (_runner.IsServer)
+            {
+                // Server: Random select and broadcast to clients
+                RandomSelectMapAndBroadcast();
+            }
+            else
+            {
+                // Client: Request map info from server
+                if (enableDebugLogs)
+                    Debug.Log("[MapSelectionCanvas] Client requesting map info from server");
+
+                // Check if MapManager already has map selected
+                var mapManager = MapManager.Instance;
+                if (mapManager != null && mapManager.CurrentMapIndex >= 0)
+                {
+                    UpdateMapDisplayFromManager();
+                }
+            }
+        }
+        private void RandomSelectMapAndBroadcast()
+        {
+            var mapManager = MapManager.Instance;
+            if (mapManager == null)
+            {
+                Debug.LogError("[MapSelectionCanvas] MapManager not found!");
+                return;
+            }
+
+            if (enableDebugLogs)
+                Debug.Log("[MapSelectionCanvas] Server random selecting map and broadcasting");
+
+            // Random select map
+            mapManager.RandomSelectAndSpawnMap();
+
+            // Update local UI immediately
+            UpdateMapDisplayFromManager();
+
+            // Broadcast to all clients via RPC through a networked component
+            BroadcastMapSelectionToClients();
+        }
+        private void BroadcastMapSelectionToClients()
+        {
+            // Find a networked component to send RPC
+            var networkedComponent = FindObjectOfType<CharacterSelectionState>();
+            if (networkedComponent != null)
+            {
+                var mapManager = MapManager.Instance;
+                if (mapManager != null)
+                {
+                    // Send RPC through existing networked component
+                    networkedComponent.RPC_UpdateMapSelection(mapManager.CurrentMapIndex);
+                }
+            }
+            else
+            {
+                Debug.LogError("[MapSelectionCanvas] No networked component found to send RPC!");
+            }
+        }
+        private void UpdateMapDisplayFromManager()
+        {
+            var mapManager = MapManager.Instance;
+            if (mapManager == null) return;
+
+            _currentMapIndex = mapManager.CurrentMapIndex;
+            _currentMapData  = mapManager.CurrentMapData;
+
+            UpdateMapDisplayUI();
+        }
+        private void UpdateMapDisplayUI()
+        {
+            if (_currentMapData == null)
+            {
+                // Show loading state
+                if (mapNameText != null)
+                    mapNameText.text = "Selecting Map...";
+
+                if (mapPreviewImage != null)
+                    mapPreviewImage.gameObject.SetActive(false);
+
+                return;
+            }
+
+            // Update map preview image
+            if (mapPreviewImage != null && _currentMapData.mapPreviewImage != null)
+            {
+                mapPreviewImage.sprite = _currentMapData.mapPreviewImage;
+                mapPreviewImage.gameObject.SetActive(true);
+            }
+
+            // Update map name text
+            if (mapNameText != null)
+            {
+                mapNameText.text = _currentMapData.mapName;
+            }
+
+            if (enableDebugLogs)
+                Debug.Log($"[MapSelectionCanvas] Updated UI for map: {_currentMapData.mapName}");
+        }
+        public void OnMapSelectionReceived(int mapIndex)
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[MapSelectionCanvas] Received map selection from server: {mapIndex}");
+
+            var mapManager = MapManager.Instance;
+            if (mapManager != null)
+            {
+                var availableMaps = mapManager.GetAvailableMaps();
+                if (mapIndex >= 0 && mapIndex < availableMaps.Length)
+                {
+                    _currentMapIndex = mapIndex;
+                    _currentMapData  = availableMaps[mapIndex];
+                    UpdateMapDisplayUI();
+                }
+            }
+        }
         private void Initialize()
         {
             if (_isInitialized) return;

@@ -337,5 +337,36 @@ namespace _GAME.Scripts.Camera
                 Gizmos.DrawWireSphere(_targetTransform.position, 0.5f);
             }
         }
+
+        /// <summary>
+        /// Set camera orthographic size based on map size
+        /// </summary>
+        public void SetCameraSize(Vector3 mapSize)
+        {
+            if (_camera == null) return;
+
+            float mapWidth  = mapSize.x;
+            float mapHeight = mapSize.y;
+
+            // Get screen aspect ratio
+            float screenAspect = (float)Screen.width / Screen.height;
+            float mapAspect    = mapWidth / mapHeight;
+
+            if (screenAspect > mapAspect)
+            {
+                // Screen wider than map - fit by height
+                _camera.orthographicSize = mapHeight / 2f;
+            }
+            else
+            {
+                // Screen taller than map - fit by width
+                _camera.orthographicSize = mapWidth / (2f * screenAspect);
+            }
+
+            // Limit minimum size để không quá nhỏ
+            _camera.orthographicSize = Mathf.Max(_camera.orthographicSize, 3f);
+
+            Debug.Log($"[CameraFollow] Set camera size: {_camera.orthographicSize} for map size: {mapSize}");
+        }
     }
 }

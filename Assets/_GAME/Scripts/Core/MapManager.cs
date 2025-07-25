@@ -144,24 +144,20 @@ public class MapManager : NetworkBehaviour
             if (enableDebugLogs)
                 Debug.Log("[MapManager] Cleaning up previous map instance");
 
-            // Check if we're in play mode or editor mode
             if (Application.isPlaying)
             {
                 Destroy(_currentMapInstance);
             }
             else
             {
-                // In editor mode, use DestroyImmediate
-                DestroyImmediate(_currentMapInstance);
+                DestroyImmediate(_currentMapInstance, true);
             }
 
             _currentMapInstance = null;
         }
 
-        // Also cleanup any remaining children in MapRoot
         if (mapRoot != null)
         {
-            // Convert to array to avoid modification during iteration
             var childrenToDestroy = new Transform[mapRoot.childCount];
             for (int i = 0; i < mapRoot.childCount; i++)
             {
@@ -178,7 +174,7 @@ public class MapManager : NetworkBehaviour
                     }
                     else
                     {
-                        DestroyImmediate(child.gameObject);
+                        DestroyImmediate(child.gameObject, true);
                     }
                 }
             }

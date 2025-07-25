@@ -175,7 +175,9 @@ namespace UI
                 StopCoroutine(_animationCoroutine);
             }
 
+            /*
             _animationCoroutine = StartCoroutine(AnimateStatsCoroutine(stats));
+        */
         }
 
         private IEnumerator AnimateStatsCoroutine(CharacterStats stats)

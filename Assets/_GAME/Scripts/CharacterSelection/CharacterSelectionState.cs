@@ -5,6 +5,7 @@ namespace _GAME.Scripts.CharacterSelection
 {
     using System;
     using System.Collections.Generic;
+    using global::UI;
 
     public class CharacterSelectionState : NetworkBehaviour, IPlayerJoined
     {
@@ -15,8 +16,7 @@ namespace _GAME.Scripts.CharacterSelection
         public event Action OnStateSpawned;
         public event Action OnReadyStateChanged;
 
-        [Networked, Capacity(2)]
-        private NetworkDictionary<PlayerRef, PlayerSelectionData> PlayerSelections => default;
+        [Networked, Capacity(2)] private NetworkDictionary<PlayerRef, PlayerSelectionData> PlayerSelections => default;
 
         private ChangeDetector _changeDetector;
 
@@ -63,9 +63,9 @@ namespace _GAME.Scripts.CharacterSelection
                 var slotNumber = PlayerSelections.Count + 1;
                 PlayerSelections.Add(player, new PlayerSelectionData
                 {
-                    Slot = slotNumber,
+                    Slot           = slotNumber,
                     CharacterIndex = -1,
-                    IsReady = false
+                    IsReady        = false
                 });
 
                 Debug.Log($"Player {player} joined with slot {slotNumber}");
@@ -275,12 +275,34 @@ namespace _GAME.Scripts.CharacterSelection
 
             Debug.Log($"[CharacterSelectionState] CanStartGame: {CanStartGame()}");
         }
+
+        /// <summary>
+        /// RPC to sync map selection to all clients
+        /// </summary>
+        [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+        public void RPC_UpdateMapSelection(int mapIndex)
+        {
+            // Update MapSelectionCanvas if it's active
+            var mapCanvas = FindObjectOfType<MapSelectionCanvas>();
+            if (mapCanvas != null)
+            {
+                mapCanvas.OnMapSelectionReceived(mapIndex);
+            }
+
+            // Also ensure MapManager is synced
+            var mapManager = MapManager.Instance;
+            if (mapManager != null && !mapManager.HasStateAuthority)
+            {
+                // Force update map index for clients
+                mapManager.CurrentMapIndex = mapIndex;
+            }
+        }
     }
 
     public struct PlayerSelectionData : INetworkStruct
     {
-        public int Slot;
-        public int CharacterIndex;
+        public int  Slot;
+        public int  CharacterIndex;
         public bool IsReady;
     }
 }

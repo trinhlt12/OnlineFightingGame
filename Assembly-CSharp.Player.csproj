@@ -156,6 +156,7 @@
     <Compile Include="Assets\_GAME\Scripts\FSM\ConcreteState\DashState.cs" />
     <Compile Include="Assets\_GAME\Scripts\FSM\ConcreteState\DieState.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\KCCRecorder.cs" />
+    <Compile Include="Assets\_GAME\Scripts\UI\PlayerIndicator.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkBool.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Network\KCCNetworkVector4.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Attributes\DisabledInPlayModeAttribute.cs" />
@@ -186,6 +187,7 @@
     <Compile Include="Assets\_GAME\Scripts\CharacterSelectionButton.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\Collections\KCCHits.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Data\KCCShapeCastHit.cs" />
+    <Compile Include="Assets\_GAME\Scripts\UI\SimpleArrowIndicator.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\SmoothValues\SmoothVector3.cs" />
     <Compile Include="Assets\Photon\FusionAddons\KCC\Utilities\Recorders\PlayerRecorder.cs" />
     <Compile Include="Assets\_GAME\Scripts\Data\MapData.cs" />
